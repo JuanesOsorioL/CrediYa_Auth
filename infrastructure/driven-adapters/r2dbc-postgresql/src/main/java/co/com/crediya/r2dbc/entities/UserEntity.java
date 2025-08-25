@@ -19,8 +19,9 @@ import java.time.LocalDate;
 
 public class UserEntity {
     @Id
-    @Column("userId")
-    private String id;
+    @Column("Id_Usuario")
+    private String userId;
+    private String documentId;
     private String firstName;
     private String lastName;
     private LocalDate birthDate;
