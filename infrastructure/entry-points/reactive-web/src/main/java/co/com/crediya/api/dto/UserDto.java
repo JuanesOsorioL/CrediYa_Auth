@@ -20,5 +20,4 @@ public record UserDto(
         String email,
         @NotNull(message = "El salario base es obligatorio")
         BigDecimal baseSalary) {
-
 }

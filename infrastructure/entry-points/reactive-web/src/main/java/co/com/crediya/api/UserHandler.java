@@ -13,7 +13,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -52,12 +51,12 @@ public class UserHandler {
         return userService.getAllUsers()
                 .map(userDtoMapper::toDto)
                 .collectList()
-                .flatMap(list ->{
-                        ApiResponse<List<UserDto>> response = new ApiResponse<>();
-                        response.setStatus(HttpStatus.OK.value());
-                        response.setMessage("Usuarios recuperados exitosamente");
-                        response.setBody(list);
-                        return ServerResponse.ok().bodyValue(response);
+                .flatMap(list -> {
+                    ApiResponse<List<UserDto>> response = new ApiResponse<>();
+                    response.setStatus(HttpStatus.OK.value());
+                    response.setMessage("Usuarios recuperados exitosamente");
+                    response.setBody(list);
+                    return ServerResponse.ok().bodyValue(response);
                 });
     }
 }
