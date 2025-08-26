@@ -1,7 +1,8 @@
 package co.com.crediya.api;
 
 
-import co.com.crediya.api.dto.CreateUserDto;
+import co.com.crediya.api.dto.UserDto;
+import co.com.crediya.api.exception.ResourceNotFoundException;
 import co.com.crediya.api.mapper.UserDtoMapper;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.UserService;
@@ -18,53 +19,46 @@ public class UserHandler {
 
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
+   // private final RequestValidator requestValidator;
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserHandler.class);
-
 
     public Mono<ServerResponse> createUser(ServerRequest request) {
         log.info("Request received to register user");
-        return request.bodyToMono(CreateUserDto.class)
+        return request.bodyToMono(UserDto.class)
                 .flatMap(dto -> {
                     User user = userDtoMapper.toUser(dto);
                     return userService.createUser(user);
                 })
+
                 .flatMap(savedUser -> ServerResponse.status(HttpStatus.CREATED)
                         .bodyValue(userDtoMapper.toDto(savedUser)))
                 .onErrorResume(e -> ServerResponse.badRequest().bodyValue(e.getMessage()));
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-//private  final UseCase useCase;
-//private  final UseCase2 useCase2;
-
-    public Mono<ServerResponse> listenGETUseCase(ServerRequest serverRequest) {
-        // useCase.logic();
-        return ServerResponse.ok().bodyValue("");
+    public Mono<ServerResponse> findAll(ServerRequest serverRequest) {
+        return userService.getAllUsers()
+                .map(userDtoMapper::toDto)
+                .collectList()
+                .flatMap(list -> ServerResponse.ok().bodyValue(list));
     }
 
-    public Mono<ServerResponse> listenGETOtherUseCase(ServerRequest serverRequest) {
-        // useCase2.logic();
-        return ServerResponse.ok().bodyValue("");
-    }
 
-    public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {
-        // useCase.logic();
-        return ServerResponse.ok().bodyValue("");
-    }
 
-    */
+    /*
+    public Mono<ServerResponse> createUser(ServerRequest request) {
+        log.info("Request received to register user");
+        return request.bodyToMono(UserDto.class)
+                //.flatMap(requestValidator::userValidate) // reactivar si usas validación
+                .map(userDtoMapper::toUser)
+                .flatMap(userService::createUser)
+                .flatMap(savedUser -> ServerResponse.status(HttpStatus.CREATED)
+                        .bodyValue(userDtoMapper.toDto(savedUser)))
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("No se pudo crear el usuario")));
+        // Nota: No capturar onErrorResume aquí para delegar manejo a global
+    }
+*/
+
+
+
 
 }

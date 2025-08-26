@@ -1,10 +1,14 @@
 server:
   port: 8080
-spring:
+adapters:
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/auth
-    username: creditUserData
-    password: za4iLVvR8qVq4yQv
+    host: "localhost"
+    port: 5432
+    database: "auth"
+    schema: "public"
+    username: "creditUserData"
+    password: "za4iLVvR8qVq4yQv"
+spring:
   application:
     name: "CrediYa_Auth"
   devtools:
@@ -26,3 +30,10 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true

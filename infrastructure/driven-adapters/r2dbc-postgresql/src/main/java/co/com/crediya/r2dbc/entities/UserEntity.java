@@ -16,17 +16,19 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Getter
 @Setter
-
 public class UserEntity {
     @Id
     @Column("Id_Usuario")
     private String userId;
-    private String documentId;
+    @Column("first_name")
     private String firstName;
+    @Column("last_name")
     private String lastName;
+    @Column("birth_date")
     private LocalDate birthDate;
     private String address;
     private String phone;
     private String email;
+    @Column("base_salary")
     private BigDecimal baseSalary;
 }

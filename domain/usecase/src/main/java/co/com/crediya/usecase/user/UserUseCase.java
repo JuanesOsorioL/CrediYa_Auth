@@ -7,6 +7,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
@@ -18,7 +19,6 @@ public class UserUseCase implements UserService {
     private static final BigDecimal SALARY_MAX = new BigDecimal("15000000");
     private static final Pattern EMAIL_REGEX = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
 
-
     @Override
     public Mono<User> createUser(User user) {
         return validateUser(user)
@@ -27,7 +27,10 @@ public class UserUseCase implements UserService {
                     if (exists) {
                         return Mono.error(new IllegalArgumentException("Email is already registered."));
                     }
-                    return userRepository.save(user);
+                    User userWithId = user.toBuilder()
+                            .userId(UUID.randomUUID().toString())
+                            .build();
+                    return userRepository.save(userWithId);
                 });
     }
 
@@ -54,38 +57,8 @@ public class UserUseCase implements UserService {
     }
 
     @Override
-    public Mono<User> getUserById(String id) {
-        return userRepository.findById(id);
-    }
-
-    @Override
     public Flux<User> getAllUsers() {
         return userRepository.findAll();
-    }
-
-    @Override
-    public Mono<User> updateUser(String id, User userUpdate) {
-        return userRepository.findById(id)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("User not found."))).flatMap(existingUser -> {
-                    existingUser.setFirstName(userUpdate.getFirstName());
-                    existingUser.setLastName(userUpdate.getLastName());
-                    existingUser.setBirthDate(userUpdate.getBirthDate());
-                    existingUser.setAddress(userUpdate.getAddress());
-                    existingUser.setPhone(userUpdate.getPhone());
-                    existingUser.setEmail(userUpdate.getEmail());
-                    existingUser.setBaseSalary(userUpdate.getBaseSalary());
-                    return userRepository.save(existingUser);
-                });
-    }
-
-    @Override
-    public Mono<Void> deleteUser(String id) {
-        return userRepository.deleteById(id);
-    }
-
-    @Override
-    public Mono<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
     }
 
 }

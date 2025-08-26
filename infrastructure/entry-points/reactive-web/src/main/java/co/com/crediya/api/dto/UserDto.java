@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record UserDto(
-        String userId,
         @NotBlank(message = "El nombre no puede ser vacío")
         String firstName,
         @NotBlank(message = "El apellido no puede ser vacío")
@@ -20,5 +19,6 @@ public record UserDto(
         @Email(message = "El correo electrónico debe ser válido")
         String email,
         @NotNull(message = "El salario base es obligatorio")
-        BigDecimal baseSalary){
+        BigDecimal baseSalary) {
+
 }
