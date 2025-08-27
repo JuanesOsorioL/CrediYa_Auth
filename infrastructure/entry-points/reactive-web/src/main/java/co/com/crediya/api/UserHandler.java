@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -32,16 +33,25 @@ public class UserHandler {
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserHandler.class);
 
+    private static final Map<String, UserErrorCode> CODE_TO_ERROR_MAP = Map.of(
+            "USR_001", UserErrorCode.FIRST_NAME_EMPTY,
+            "USR_002", UserErrorCode.LAST_NAME_EMPTY,
+            "USR_003", UserErrorCode.EMAIL_INVALID,
+            "USR_006", UserErrorCode.EMAIL_EMPTY,
+            "USR_004", UserErrorCode.BASE_SALARY_INVALID,
+            "USR_007", UserErrorCode.BASE_SALARY_EMPTY
+    );
+
+
     public Mono<ServerResponse> createUser(ServerRequest request) {
         return request.bodyToMono(UserDto.class)
                 .flatMap(dto -> {
                     List<UserErrorCode> infraErrors = validator.validate(dto).stream()
-                            .map(v -> mapConstraintViolationToErrorCode(v.getPropertyPath().toString(), v.getMessage()))
+                            .map(v -> mapMessageToErrorCode(v.getMessage()))
                             .filter(Objects::nonNull)
                             .distinct()
                             .toList();
                     User user = userDtoMapper.toUser(dto);
-                    log.info("errores de infraestructura: {}", infraErrors);
                     return Mono.just(new UserValidationResult(user, infraErrors, List.of()));
                 })
                 .flatMap(result -> {
@@ -61,56 +71,39 @@ public class UserHandler {
                             .toList();
                     log.info("todos los errores {}", allErrors);
                     if (!allErrors.isEmpty()) {
-                        ApiResponse<List<String>> errorResponse = new ApiResponse<>();
-                        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-                        errorResponse.setMessage("Errores de validación");
-                        errorResponse.setBody(allErrors.stream()
-                                .map(UserErrorCode::getMessage)
-                                .toList());
-                        return ServerResponse.badRequest().bodyValue(errorResponse);
+                        return buildResponse(HttpStatus.BAD_REQUEST, "Errores de validación",
+                                allErrors.stream().map(UserErrorCode::getMessage).toList());
                     }
 
-                    ApiResponse<UserDto> successResponse = new ApiResponse<>();
-                    successResponse.setStatus(HttpStatus.CREATED.value());
-                    successResponse.setMessage("Usuario creado exitosamente");
-                    successResponse.setBody(userDtoMapper.toDto(result.getUser()));
-                    return ServerResponse.status(HttpStatus.CREATED).bodyValue(successResponse);
+                    return buildResponse(HttpStatus.CREATED, "Usuario creado exitosamente",
+                            userDtoMapper.toDto(result.getUser()));
+
                 })
                 .onErrorResume(e -> {
                     if (e instanceof ValidationException ve) {
-                        return errorResponse(HttpStatus.BAD_REQUEST, "Errores en la entrada", ve.getErrors());
+                        return buildResponse(HttpStatus.BAD_REQUEST, "Errores en la entrada", ve.getErrors());
                     } else if (e instanceof DomainValidationException dve) {
-                        return errorResponse(HttpStatus.BAD_REQUEST, "Errores de negocio", dve.getErrors());
+                        return buildResponse(HttpStatus.BAD_REQUEST, "Errores de negocio", dve.getErrors());
                     } else {
                         log.error("Error inesperado", e);
                         return
-                                errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", List.of(UserErrorCode.GENERIC_ERROR));
+                                buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", List.of(UserErrorCode.GENERIC_ERROR));
                     }
                 });
     }
 
-    private Mono<ServerResponse> errorResponse(HttpStatus status, String message, List<UserErrorCode> errors) {
-        ApiResponse<List<String>> response = new ApiResponse<>();
+
+    private <T> Mono<ServerResponse> buildResponse(HttpStatus status, String message, T body) {
+        ApiResponse<T> response = new ApiResponse<>();
         response.setStatus(status.value());
         response.setMessage(message);
-        response.setBody(errors.stream().map(UserErrorCode::getMessage).toList());
+        response.setBody(body);
         return ServerResponse.status(status).bodyValue(response);
     }
 
-    private UserErrorCode mapConstraintViolationToErrorCode(String propertyPath, String message) {
-        return switch (propertyPath) {
-            case "firstName" -> UserErrorCode.FIRST_NAME_EMPTY;
-            case "lastName" -> UserErrorCode.LAST_NAME_EMPTY;
-            case "email" -> {
-                if (message.contains("El correo electrónico no puede ser vacío")) yield UserErrorCode.EMAIL_EMPTY;
-                else yield UserErrorCode.EMAIL_INVALID;
-            }
-            case "baseSalary" -> {
-                if (message.contains("no puede ser vacío")) yield UserErrorCode.BASE_SALARY_EMPTY;
-                else yield UserErrorCode.BASE_SALARY_INVALID;
-            }
-            default -> null;
-        };
+
+    private UserErrorCode mapMessageToErrorCode(String code) {
+        return CODE_TO_ERROR_MAP.get(code);
     }
 
 
