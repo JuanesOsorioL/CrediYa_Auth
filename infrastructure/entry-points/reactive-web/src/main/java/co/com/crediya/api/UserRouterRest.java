@@ -1,7 +1,6 @@
 package co.com.crediya.api;
 
 
-import io.swagger.v3.oas.annotations.Operation;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
@@ -23,27 +22,34 @@ public class UserRouterRest {
                     path = "/api/v1/usuarios",
                     method = RequestMethod.POST,
                     beanClass = UserHandler.class,
-                    beanMethod = "createUser",
-                    operation = @Operation(
-                            operationId = "createUser",
-                            summary = "Crear un nuevo usuario",
-                            description = "Crea un usuario en la base de datos"
-                    )
-            ),
+                    beanMethod = "createUser"),
+
             @RouterOperation(
                     path = "/api/v1/usuarios",
                     method = RequestMethod.GET,
                     beanClass = UserHandler.class,
-                    beanMethod = "findAll",
-                    operation = @Operation(
-                            operationId = "findAllUsers",
-                            summary = "Obtener todos los usuarios",
-                            description = "Recupera todos los usuarios"
-                    )
-            )
+                    beanMethod = "findAll")
     })
     public RouterFunction<ServerResponse> routerFunction(UserHandler handler) {
         return route(POST("/api/v1/usuarios"), handler::createUser)
                 .andRoute(GET("/api/v1/usuarios"), handler::findAll);
     }
 }
+  /* */
+
+
+
+
+/*
+,
+                    operation = @Operation(
+                            operationId = "findAllUsers",
+                            summary = "Obtener todos los usuarios",
+                            description = "Recupera todos los usuarios",
+                            requestBody =
+                            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                    required = true,
+                                    content = @Content(schema = @Schema(implementation = UserDto.class))
+                            )
+                    )
+            )*/

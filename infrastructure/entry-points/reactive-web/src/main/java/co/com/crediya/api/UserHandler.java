@@ -1,7 +1,7 @@
 package co.com.crediya.api;
 
 
-import co.com.crediya.api.dto.ApiResponse;
+import co.com.crediya.api.dto.ApiRespons;
 import co.com.crediya.api.dto.UserDto;
 import co.com.crediya.api.exception.ValidationException;
 import co.com.crediya.api.mapper.UserDtoMapper;
@@ -10,6 +10,11 @@ import co.com.crediya.usecase.user.UserService;
 import co.com.crediya.usecase.user.exception.DomainValidationException;
 import co.com.crediya.usecase.user.exception.UserErrorCode;
 import co.com.crediya.usecase.user.exception.UserValidationResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -41,6 +46,49 @@ public class UserHandler {
             "USR_004", UserErrorCode.BASE_SALARY_INVALID,
             "USR_007", UserErrorCode.BASE_SALARY_EMPTY
     );
+
+
+    @Operation(
+            operationId = "findAll",
+            responses = {
+                    @ApiResponse(
+                            content = @Content(
+                                    schema = @Schema(implementation = User.class)
+                            )
+                    )
+            }
+    )
+    public Mono<ServerResponse> findAll(ServerRequest serverRequest) {
+        return userService.getAllUsers().map(userDtoMapper::toDto).collectList().flatMap(list -> {
+            ApiRespons<List<UserDto>> response = new ApiRespons<>();
+            response.setStatus(HttpStatus.OK.value());
+            response.setMessage("Usuarios recuperados exitosamente");
+            response.setBody(list);
+            return ServerResponse.ok().bodyValue(response);
+        });
+    }
+
+
+    @Operation(
+            operationId = "createUser",
+            responses = {
+                    @ApiResponse(
+                            content = @Content(
+                                    schema = @Schema(implementation = UserDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            content = @Content(
+                                    schema = @Schema(implementation = UserDto.class)
+                            )
+                    )
+            },
+            requestBody = @RequestBody(
+                    content = @Content(
+                            schema = @Schema(implementation = UserDto.class)
+                    )
+            )
+    )
 
 
     public Mono<ServerResponse> createUser(ServerRequest request) {
@@ -94,7 +142,7 @@ public class UserHandler {
 
 
     private <T> Mono<ServerResponse> buildResponse(HttpStatus status, String message, T body) {
-        ApiResponse<T> response = new ApiResponse<>();
+        ApiRespons<T> response = new ApiRespons<>();
         response.setStatus(status.value());
         response.setMessage(message);
         response.setBody(body);
@@ -107,13 +155,4 @@ public class UserHandler {
     }
 
 
-    public Mono<ServerResponse> findAll(ServerRequest serverRequest) {
-        return userService.getAllUsers().map(userDtoMapper::toDto).collectList().flatMap(list -> {
-            ApiResponse<List<UserDto>> response = new ApiResponse<>();
-            response.setStatus(HttpStatus.OK.value());
-            response.setMessage("Usuarios recuperados exitosamente");
-            response.setBody(list);
-            return ServerResponse.ok().bodyValue(response);
-        });
-    }
 }
