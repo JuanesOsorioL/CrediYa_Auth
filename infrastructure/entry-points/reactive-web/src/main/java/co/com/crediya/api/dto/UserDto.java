@@ -16,8 +16,8 @@ public record UserDto(
         String address,
         String phone,
         @NotBlank(message = "El correo electrónico no puede ser vacío")
-        @Email(message = "El correo electrónico debe ser válido")
+        @Email(message = "El correo electrónico no es válido")
         String email,
-        @NotNull(message = "El salario base es obligatorio")
+        @NotNull(message = "El salario base no puede ser vacío")
         BigDecimal baseSalary) {
 }

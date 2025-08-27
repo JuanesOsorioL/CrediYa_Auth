@@ -2,11 +2,15 @@ package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
+import co.com.crediya.usecase.user.exception.DomainValidationException;
+import co.com.crediya.usecase.user.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -21,39 +25,39 @@ public class UserUseCase implements UserService {
 
     @Override
     public Mono<User> createUser(User user) {
-        return validateUser(user)
-                .then(userRepository.existsByEmail(user.getEmail()))
-                .flatMap(exists -> {
-                    if (exists) {
-                        return Mono.error(new IllegalArgumentException("Email is already registered."));
-                    }
-                    User userWithId = user.toBuilder()
-                            .userId(UUID.randomUUID().toString())
-                            .build();
-                    return userRepository.save(userWithId);
-                });
-    }
-
-    private Mono<Void> validateUser(User user) {
+        List<UserErrorCode> errors = new ArrayList<>();
         if (user.getFirstName() == null || user.getFirstName().trim().isEmpty()) {
-            return Mono.error(new IllegalArgumentException("First name is required."));
+            errors.add(UserErrorCode.FIRST_NAME_EMPTY);
         }
         if (user.getLastName() == null || user.getLastName().trim().isEmpty()) {
-            return Mono.error(new IllegalArgumentException("Last name is required."));
+            errors.add(UserErrorCode.LAST_NAME_EMPTY);
         }
         if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            return Mono.error(new IllegalArgumentException("Email is required."));
+            errors.add(UserErrorCode.EMAIL_EMPTY);
         }
         if (!EMAIL_REGEX.matcher(user.getEmail()).matches()) {
-            return Mono.error(new IllegalArgumentException("Email format is invalid."));
+            errors.add(UserErrorCode.EMAIL_INVALID);
         }
         if (user.getBaseSalary() == null) {
-            return Mono.error(new IllegalArgumentException("Base salary is required."));
+            errors.add(UserErrorCode.BASE_SALARY_EMPTY);
         }
         if (user.getBaseSalary().compareTo(SALARY_MIN) < 0 || user.getBaseSalary().compareTo(SALARY_MAX) > 0) {
-            return Mono.error(new IllegalArgumentException("Base salary must be between 0 and 15,000,000."));
+            errors.add(UserErrorCode.BASE_SALARY_INVALID);
         }
-        return Mono.empty();
+        if (!errors.isEmpty()) {
+            return Mono.error(new
+                    DomainValidationException(errors));
+        }
+        return userRepository.existsByEmail(user.getEmail())
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(new DomainValidationException(List.of(UserErrorCode.EMAIL_ALREADY_REGISTERED)));
+                    }
+                    User withId = user.toBuilder()
+                            .userId(UUID.randomUUID().toString())
+                            .build();
+                    return userRepository.save(withId);
+                });
     }
 
     @Override

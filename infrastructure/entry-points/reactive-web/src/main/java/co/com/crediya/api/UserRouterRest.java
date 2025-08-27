@@ -1,7 +1,12 @@
 package co.com.crediya.api;
 
+
+import io.swagger.v3.oas.annotations.Operation;
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
@@ -11,9 +16,34 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Configuration
 public class UserRouterRest {
+
     @Bean
+    @RouterOperations({
+            @RouterOperation(
+                    path = "/api/v1/usuarios",
+                    method = RequestMethod.POST,
+                    beanClass = UserHandler.class,
+                    beanMethod = "createUser",
+                    operation = @Operation(
+                            operationId = "createUser",
+                            summary = "Crear un nuevo usuario",
+                            description = "Crea un usuario en la base de datos"
+                    )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/usuarios",
+                    method = RequestMethod.GET,
+                    beanClass = UserHandler.class,
+                    beanMethod = "findAll",
+                    operation = @Operation(
+                            operationId = "findAllUsers",
+                            summary = "Obtener todos los usuarios",
+                            description = "Recupera todos los usuarios"
+                    )
+            )
+    })
     public RouterFunction<ServerResponse> routerFunction(UserHandler handler) {
         return route(POST("/api/v1/usuarios"), handler::createUser)
-            .andRoute(GET("/api/v1/usuarios"), handler::findAll);
+                .andRoute(GET("/api/v1/usuarios"), handler::findAll);
     }
 }
