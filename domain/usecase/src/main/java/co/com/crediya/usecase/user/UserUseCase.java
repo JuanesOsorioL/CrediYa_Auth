@@ -40,8 +40,7 @@ public class UserUseCase implements UserService {
         }
         if (user.getBaseSalary() == null) {
             errors.add(UserErrorCode.BASE_SALARY_EMPTY);
-        }
-        if (user.getBaseSalary().compareTo(SALARY_MIN) < 0 || user.getBaseSalary().compareTo(SALARY_MAX) > 0) {
+        }else if (user.getBaseSalary().compareTo(SALARY_MIN) < 0 || user.getBaseSalary().compareTo(SALARY_MAX) > 0) {
             errors.add(UserErrorCode.BASE_SALARY_INVALID);
         }
         if (!errors.isEmpty()) {

@@ -20,7 +20,4 @@ public enum UserErrorCode {
         this.code = code;
         this.message = message;
     }
-
-
-
 }

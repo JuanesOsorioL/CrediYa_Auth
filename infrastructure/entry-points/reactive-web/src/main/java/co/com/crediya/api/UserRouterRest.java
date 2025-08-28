@@ -35,21 +35,3 @@ public class UserRouterRest {
                 .andRoute(GET("/api/v1/usuarios"), handler::findAll);
     }
 }
-  /* */
-
-
-
-
-/*
-,
-                    operation = @Operation(
-                            operationId = "findAllUsers",
-                            summary = "Obtener todos los usuarios",
-                            description = "Recupera todos los usuarios",
-                            requestBody =
-                            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                                    required = true,
-                                    content = @Content(schema = @Schema(implementation = UserDto.class))
-                            )
-                    )
-            )*/
