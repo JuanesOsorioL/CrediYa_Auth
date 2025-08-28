@@ -3,8 +3,9 @@ package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
-import co.com.crediya.usecase.user.exception.DomainValidationException;
+
 import co.com.crediya.usecase.user.exception.UserErrorCode;
+import co.com.crediya.usecase.user.exception.UserValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -42,7 +43,7 @@ class UserUseCaseTest {
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof DomainValidationException dve &&
+                        throwable instanceof UserValidationException dve &&
                                 dve.getDomainErrors().contains(UserErrorCode.FIRST_NAME_EMPTY) &&
                                 dve.getDomainErrors().contains(UserErrorCode.LAST_NAME_EMPTY) &&
                                 dve.getDomainErrors().contains(UserErrorCode.BASE_SALARY_INVALID) &&
@@ -57,7 +58,7 @@ class UserUseCaseTest {
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof DomainValidationException dve &&
+                        throwable instanceof UserValidationException dve &&
                                 dve.getDomainErrors().contains(UserErrorCode.FIRST_NAME_EMPTY)
                 )
                 .verify();
@@ -69,7 +70,7 @@ class UserUseCaseTest {
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof DomainValidationException dve &&
+                        throwable instanceof UserValidationException dve &&
                                 dve.getDomainErrors().contains(UserErrorCode.LAST_NAME_EMPTY)
                 )
                 .verify();
@@ -92,7 +93,7 @@ class UserUseCaseTest {
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof DomainValidationException dve &&
+                        throwable instanceof UserValidationException dve &&
                                 dve.getDomainErrors().contains(UserErrorCode.BASE_SALARY_INVALID)
                 )
                 .verify();
@@ -105,7 +106,7 @@ class UserUseCaseTest {
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof DomainValidationException dve &&
+                        throwable instanceof UserValidationException dve &&
 
                                 dve.getDomainErrors().contains(UserErrorCode.BASE_SALARY_EMPTY)
                 )
@@ -124,7 +125,7 @@ class UserUseCaseTest {
 
         StepVerifier.create(userUseCase.createUser(user))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof DomainValidationException dve &&
+                        throwable instanceof UserValidationException dve &&
                                 dve.getDomainErrors().contains(UserErrorCode.EMAIL_ALREADY_REGISTERED))
                 .verify();
 

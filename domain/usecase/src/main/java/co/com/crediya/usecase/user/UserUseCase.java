@@ -2,8 +2,8 @@ package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
-import co.com.crediya.usecase.user.exception.DomainValidationException;
 import co.com.crediya.usecase.user.exception.UserErrorCode;
+import co.com.crediya.usecase.user.exception.UserValidationException;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,17 +40,16 @@ public class UserUseCase implements UserService {
         }
         if (user.getBaseSalary() == null) {
             errors.add(UserErrorCode.BASE_SALARY_EMPTY);
-        }else if (user.getBaseSalary().compareTo(SALARY_MIN) < 0 || user.getBaseSalary().compareTo(SALARY_MAX) > 0) {
+        } else if (user.getBaseSalary().compareTo(SALARY_MIN) < 0 || user.getBaseSalary().compareTo(SALARY_MAX) > 0) {
             errors.add(UserErrorCode.BASE_SALARY_INVALID);
         }
         if (!errors.isEmpty()) {
-            return Mono.error(new
-                    DomainValidationException(errors));
+            return Mono.error(new UserValidationException(List.of(), errors));
         }
         return userRepository.existsByEmail(user.getEmail())
                 .flatMap(exists -> {
                     if (exists) {
-                        return Mono.error(new DomainValidationException(List.of(UserErrorCode.EMAIL_ALREADY_REGISTERED)));
+                        return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.EMAIL_ALREADY_REGISTERED)));
                     }
                     User withId = user.toBuilder()
                             .userId(UUID.randomUUID().toString())

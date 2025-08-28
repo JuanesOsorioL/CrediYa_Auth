@@ -1,6 +1,7 @@
 package co.com.crediya.api;
 
 
+import co.com.crediya.api.exception.GlobalErrorHandler;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +31,9 @@ public class UserRouterRest {
                     beanClass = UserHandler.class,
                     beanMethod = "findAll")
     })
-    public RouterFunction<ServerResponse> routerFunction(UserHandler handler) {
+    public RouterFunction<ServerResponse> routerFunction(UserHandler handler, GlobalErrorHandler errorHandler) {
         return route(POST("/api/v1/usuarios"), handler::createUser)
-                .andRoute(GET("/api/v1/usuarios"), handler::findAll);
+                .andRoute(GET("/api/v1/usuarios"), handler::findAll)
+                .filter(errorHandler.filter());
     }
 }

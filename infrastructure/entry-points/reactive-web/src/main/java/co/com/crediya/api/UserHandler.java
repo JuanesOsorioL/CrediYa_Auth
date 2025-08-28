@@ -1,15 +1,13 @@
 package co.com.crediya.api;
 
 
-import co.com.crediya.api.dto.ApiRespons;
 import co.com.crediya.api.dto.UserDto;
-import co.com.crediya.api.exception.InfrastructureValidationException;
+import co.com.crediya.api.exception.ApiResponseBuilder;
 import co.com.crediya.api.mapper.UserDtoMapper;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.UserService;
-import co.com.crediya.usecase.user.exception.DomainValidationException;
 import co.com.crediya.usecase.user.exception.UserErrorCode;
-import co.com.crediya.usecase.user.exception.UserValidationResultWrapper;
+import co.com.crediya.usecase.user.exception.UserValidationException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,15 +24,16 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
 public class UserHandler {
 
+    private final ApiResponseBuilder apiResponseBuilder;
     private final UserService userService;
     private final UserDtoMapper userDtoMapper;
     private final Validator validator;
+
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserHandler.class);
 
@@ -51,14 +50,6 @@ public class UserHandler {
         return CODE_TO_ERROR_MAP.get(code);
     }
 
-    private <T> Mono<ServerResponse> buildResponse(HttpStatus status, String message, T body) {
-        ApiRespons<T> response = new ApiRespons<>();
-        response.setStatus(status.value());
-        response.setMessage(message);
-        response.setBody(body);
-        return ServerResponse.status(status).bodyValue(response);
-    }
-
     @Operation(
             operationId = "findAll",
             responses = {
@@ -73,8 +64,8 @@ public class UserHandler {
         return userService.getAllUsers()
                 .map(userDtoMapper::toDto)
                 .collectList()
-                .flatMap(list -> buildResponse(HttpStatus.OK, "Usuarios recuperados exitosamente", list))
-                .onErrorResume(e -> buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", List.of("Error al recuperar usuarios")));
+                .flatMap(list -> apiResponseBuilder.build(HttpStatus.OK, "Usuarios recuperados exitosamente", list))
+                .onErrorResume(e -> apiResponseBuilder.build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", List.of("Error al recuperar usuarios")));
     }
 
 
@@ -98,7 +89,6 @@ public class UserHandler {
                     )
             )
     )
-/*
     public Mono<ServerResponse> createUser(ServerRequest request) {
         return request.bodyToMono(UserDto.class)
                 .flatMap(dto -> {
@@ -108,80 +98,14 @@ public class UserHandler {
                             .distinct()
                             .toList();
 
-                    User user = userDtoMapper.toUser(dto);
-
-                    return userService.createUser(user)
-                            .map(savedUser -> new UserValidationResultWrapper(savedUser, infraErrors, List.of()))
-                            .onErrorResume(DomainValidationException.class, dve ->
-                                    Mono.just(new UserValidationResultWrapper(user, infraErrors, dve.getDomainErrors()))
-                            );
-                })
-                .flatMap(result -> {
-                    List<UserErrorCode> allErrors = Stream.concat(result.getInfraErrors().stream(), result.getDomainErrors().stream())
-                            .distinct()
-                            .toList();
-
-                    if (!allErrors.isEmpty()) {
-                        return buildResponse(HttpStatus.BAD_REQUEST, "Errores de validación",
-                                allErrors.stream().map(UserErrorCode::getMessage).toList());
+                    if (!infraErrors.isEmpty()) {
+                        return Mono.error(new UserValidationException(infraErrors, List.of()));
                     }
-
-                    return buildResponse(HttpStatus.CREATED, "Usuario creado exitosamente",
-                            userDtoMapper.toDto(result.getUser()));
-                })
-                .onErrorResume(e -> {
-                    log.error("Error inesperado", e);
-                    return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", List.of(UserErrorCode.GENERIC_ERROR));
-                });
-    }
-*/
-
-
-
-
-
-    public Mono<ServerResponse> createUser(ServerRequest request) {
-        return request.bodyToMono(UserDto.class)
-                .flatMap(dto -> {
-                    List<UserErrorCode> infraErrors = validator.validate(dto).stream()
-                            .map(v -> mapMessageToErrorCode(v.getMessage()))
-                            .filter(Objects::nonNull)
-                            .distinct()
-                            .toList();
                     User user = userDtoMapper.toUser(dto);
-                    return Mono.just(new UserValidationResultWrapper(user, infraErrors, List.of()));
-                })
-                .flatMap(result -> {
-                    User user = result.getUser();
-                    List<UserErrorCode> infraErrors = result.getInfraErrors();
-
                     return userService.createUser(user)
-                            .map(savedUser -> new UserValidationResultWrapper(savedUser, infraErrors, List.of()))
-                            .onErrorResume(DomainValidationException.class, dve ->
-                                    Mono.just(new UserValidationResultWrapper(user, infraErrors, dve.getDomainErrors()))
-                            );
+                            .map(userDtoMapper::toDto);
                 })
-                .flatMap(result -> {
-                    log.info("errores de dominio: {}", result.getDomainErrors());
-                    List<UserErrorCode> allErrors = Stream.concat(result.getInfraErrors().stream(), result.getDomainErrors().stream())
-                            .distinct()
-                            .toList();
-                    log.info("todos los errores {}", allErrors);
-                    if (!allErrors.isEmpty()) {
-                        return buildResponse(HttpStatus.BAD_REQUEST, "Errores de validación",
-                                allErrors.stream().map(UserErrorCode::getMessage).toList());
-                    }
-
-                    return buildResponse(HttpStatus.CREATED, "Usuario creado exitosamente",
-                            userDtoMapper.toDto(result.getUser()));
-
-                })
-               .onErrorResume(e -> {
-                    log.error("Error inesperado", e);
-                    return
-                            buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", List.of(UserErrorCode.GENERIC_ERROR));
-                });
+                .flatMap(userDto -> apiResponseBuilder.build(HttpStatus.CREATED, "Usuario creado exitosamente", userDto));
     }
-
 
 }
