@@ -26,7 +26,6 @@ public class UserEntity {
     private String lastName;
     @Column("birth_date")
     private LocalDate birthDate;
-    private String address;
     private String phone;
     private String email;
     @Column("base_salary")

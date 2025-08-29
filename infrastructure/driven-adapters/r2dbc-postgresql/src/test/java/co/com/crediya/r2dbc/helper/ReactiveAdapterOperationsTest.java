@@ -13,6 +13,7 @@ import reactor.test.StepVerifier;
 
 import java.util.Objects;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -96,6 +97,20 @@ class ReactiveAdapterOperationsTest {
         StepVerifier.create(operations.findAll())
                 .expectNext(entity1, entity2)
                 .verifyComplete();
+    }
+
+    @Test//se implemento
+    void testToDataAndToEntity() {
+        DummyEntity entity = new DummyEntity("1", "test");
+        DummyData data = new DummyData("1", "test");
+
+        when(mapper.map(entity, DummyData.class)).thenReturn(data);
+
+        DummyData mappedData = operations.toData(entity);
+        DummyEntity mappedEntity = operations.toEntity(data);
+
+        assertThat(mappedData).isEqualTo(data);
+        assertThat(mappedEntity).isEqualTo(entity);
     }
 
     static class DummyEntity {

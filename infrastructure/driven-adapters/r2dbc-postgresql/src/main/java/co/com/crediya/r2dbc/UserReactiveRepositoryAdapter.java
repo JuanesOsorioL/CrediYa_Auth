@@ -20,7 +20,6 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         super(repository, mapper, d -> mapper.mapBuilder(d, User.UserBuilder.class).build());
     }
 
-
     @Override
     public Mono<Boolean> existsByEmail(String email) {
         return repository.existsByEmail(email);

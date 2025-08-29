@@ -1,39 +1,24 @@
 package co.com.crediya.api;
 
 
+import co.com.crediya.api.config.UserPath;
 import co.com.crediya.api.exception.GlobalErrorHandler;
-import org.springdoc.core.annotations.RouterOperation;
-import org.springdoc.core.annotations.RouterOperations;
+import co.com.crediya.api.openapi.UserOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
-import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+import static org.springdoc.webflux.core.fn.SpringdocRouteBuilder.route;
 
 @Configuration
 public class UserRouterRest {
-
     @Bean
-    @RouterOperations({
-            @RouterOperation(
-                    path = "/api/v1/usuarios",
-                    method = RequestMethod.POST,
-                    beanClass = UserHandler.class,
-                    beanMethod = "createUser"),
-
-            @RouterOperation(
-                    path = "/api/v1/usuarios",
-                    method = RequestMethod.GET,
-                    beanClass = UserHandler.class,
-                    beanMethod = "findAll")
-    })
-    public RouterFunction<ServerResponse> routerFunction(UserHandler handler, GlobalErrorHandler errorHandler) {
-        return route(POST("/api/v1/usuarios"), handler::createUser)
-                .andRoute(GET("/api/v1/usuarios"), handler::findAll)
+    public RouterFunction<ServerResponse> routerFunction(UserHandler handler, GlobalErrorHandler errorHandler, UserPath userPath) {
+        return route()
+                .POST(userPath.getBase(), handler::createUser, UserOpenApi::createUser)
+                .GET(userPath.getBase(), handler::findAll, UserOpenApi::findAll)
+                .build()
                 .filter(errorHandler.filter());
     }
 }

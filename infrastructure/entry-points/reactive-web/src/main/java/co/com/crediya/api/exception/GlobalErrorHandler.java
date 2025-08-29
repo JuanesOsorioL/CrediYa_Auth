@@ -1,5 +1,6 @@
 package co.com.crediya.api.exception;
 
+import co.com.crediya.api.logger.GlobalLogger;
 import co.com.crediya.usecase.user.exception.UserErrorCode;
 import co.com.crediya.usecase.user.exception.UserValidationException;
 import org.springframework.http.HttpStatus;
@@ -15,28 +16,36 @@ import java.util.stream.Stream;
 public class GlobalErrorHandler {
 
     private final ApiResponseBuilder apiResponseBuilder;
+    private final GlobalLogger logger;
 
-    public GlobalErrorHandler(ApiResponseBuilder apiResponseBuilder) {
+    public GlobalErrorHandler(ApiResponseBuilder apiResponseBuilder, GlobalLogger logger) {
         this.apiResponseBuilder = apiResponseBuilder;
+        this.logger = logger;
     }
 
     public HandlerFilterFunction<ServerResponse, ServerResponse> filter() {
         return (request, next) -> next.handle(request)
-                .onErrorResume(UserValidationException.class, ex -> apiResponseBuilder.build(
-                        HttpStatus.BAD_REQUEST,
-                        "Errores de validación",
+                .onErrorResume(UserValidationException.class, ex -> {
+                    logger.warn("Errores de UserValidationException");
+                    return apiResponseBuilder.build(
+                            HttpStatus.BAD_REQUEST,
+                            "Errores de validación",
 
-                        Stream.concat(
-                                        ex.getInfraErrors().stream(),
-                                        ex.getDomainErrors().stream())
-                                .map(UserErrorCode::getMessage)
-                                .distinct()
-                                .toList()
-                ))
-                .onErrorResume(Exception.class, ex -> apiResponseBuilder.build(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Error interno del servidor",
-                        List.of("Ocurrió un error inesperado")
-                ));
+                            Stream.concat(
+                                            ex.getInfraErrors().stream(),
+                                            ex.getDomainErrors().stream())
+                                    .map(UserErrorCode::getMessage)
+                                    .distinct()
+                                    .toList()
+                    );
+                })
+                .onErrorResume(Exception.class, ex -> {
+                    logger.error("Errores de validación", ex);
+                    return apiResponseBuilder.build(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Error interno del servidor",
+                            List.of("Ocurrió un error inesperado")
+                    );
+                }).doFinally(signal -> logger.info("Flujo finalizado!!"));
     }
 }

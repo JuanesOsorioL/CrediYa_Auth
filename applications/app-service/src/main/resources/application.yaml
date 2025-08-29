@@ -37,3 +37,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+logging:
+  level:
+    root: WARN
+    co.com.crediya.api.logger.GlobalLogger: INFO
+routes:
+  user:
+    base: /api/v1/usuarios
