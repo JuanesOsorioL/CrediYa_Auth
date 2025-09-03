@@ -18,6 +18,7 @@ public class UserRouterRest {
         return route()
                 .POST(userPath.getBase(), handler::createUser, UserOpenApi::createUser)
                 .GET(userPath.getBase(), handler::findAll, UserOpenApi::findAll)
+                .POST(userPath.getDocument(), handler::findByDocumentId, UserOpenApi::findByDocumentId)
                 .build()
                 .filter(errorHandler.filter());
     }

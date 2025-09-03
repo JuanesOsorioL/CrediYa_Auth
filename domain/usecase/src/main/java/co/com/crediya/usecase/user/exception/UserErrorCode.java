@@ -2,6 +2,10 @@ package co.com.crediya.usecase.user.exception;
 
 import lombok.Getter;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Getter
 public enum UserErrorCode {
     GENERIC_ERROR("USR_999", "Por favor intente luego."),
@@ -11,6 +15,9 @@ public enum UserErrorCode {
     BASE_SALARY_INVALID("USR_004", "El salario base debe estar entre 0 y 15.000.000"),
     EMAIL_ALREADY_REGISTERED("USR_005", "El correo electrónico ya está registrado"),
     BASE_SALARY_EMPTY("USR_007", "El salario base no puede ser vacío"),
+    DOCUMENT_EMPTY("USR_008", "El Documento no puede ser vacío"),
+    USER_NOT_FOUND("USR_009", "Cliente no encontrado"),
+    DOCUMENT_ALREADY_REGISTERED("USR_010", "El Documento ingresado ya existe"),
     EMAIL_EMPTY("USR_006", "El correo electrónico no puede ser vacío");
 
     private final String code;
@@ -19,5 +26,13 @@ public enum UserErrorCode {
     UserErrorCode(String code, String message) {
         this.code = code;
         this.message = message;
+    }
+
+    private static final Map<String, UserErrorCode> CODE_MAP = Stream.of(values())
+            .collect(Collectors.toMap(UserErrorCode::getCode, e -> e));
+
+
+    public static UserErrorCode fromCode(String code) {
+        return CODE_MAP.get(code);
     }
 }

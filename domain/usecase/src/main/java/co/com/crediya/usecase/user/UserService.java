@@ -9,4 +9,6 @@ public interface UserService {
     Mono<User> createUser(User user);
 
     Flux<User> getAllUsers();
+
+    Mono<User> findByDocumentId(String documentId);
 }

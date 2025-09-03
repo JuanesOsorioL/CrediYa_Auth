@@ -1,6 +1,8 @@
 package co.com.crediya.api.openapi;
 
 
+
+import co.com.crediya.api.dto.UserDocumentDto;
 import co.com.crediya.api.dto.UserDto;
 import co.com.crediya.model.user.User;
 import lombok.experimental.UtilityClass;
@@ -49,5 +51,33 @@ public class UserOpenApi {
                         .description("Error interno")
                         .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
                                 .schema(schemaBuilder().implementation(ErrorResponse.class))));
+    }
+
+
+    public Builder findByDocumentId(Builder builder) {
+        return builder
+                .operationId("findByDocumentId")
+                .description("buscar un usuario por documento")
+                .tag("User")
+                .requestBody(requestBodyBuilder()
+                        .required(true)
+                        .content(contentBuilder()
+                                .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                .schema(schemaBuilder()
+                                        .implementation(UserDocumentDto.class))))
+                .response(responseBuilder()
+                        .responseCode(String.valueOf(HttpStatus.OK.value()))
+                        .description("Usuario encontrado exitosamente")
+                        .content(contentBuilder()
+                                .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                .schema(schemaBuilder()
+                                        .implementation(UserDto.class))))
+                .response(responseBuilder()
+                        .responseCode(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                        .description("Petición inválida o usuario no encontrado")
+                        .content(contentBuilder()
+                                .mediaType(MediaType.APPLICATION_JSON_VALUE)
+                                .schema(schemaBuilder()
+                                        .implementation(ErrorResponse.class))));
     }
 }

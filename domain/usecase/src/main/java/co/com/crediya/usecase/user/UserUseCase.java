@@ -55,10 +55,19 @@ public class UserUseCase implements UserService {
             logger.info("Se Genero Lista de Errores de Validacion");
             return Mono.error(new UserValidationException(List.of(), errors));
         }
+
+        return userRepository.existUserByDocumentId(user.getDocumentId())
+                .doOnSubscribe(u -> logger.info("Se Verifica si ya existe el documento de identidad"))
+                        .flatMap(exist -> {
+                                    if (exist) {
+                                        logger.info("Documento de identidad ya existe");
+                                        return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.DOCUMENT_ALREADY_REGISTERED)));
+                                    }
+
         logger.info("Se Verifica si correo ya existe");
         return userRepository.existsByEmail(user.getEmail())
-                .flatMap(exists -> {
-                    if (exists) {
+                .flatMap(emailExists -> {
+                    if (emailExists) {
                         logger.info("Correo si existe");
                         return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.EMAIL_ALREADY_REGISTERED)));
                     }
@@ -69,6 +78,7 @@ public class UserUseCase implements UserService {
                     return userRepository.save(withId)
                             .doOnNext(u -> logger.info("Usuario guardado con id "));
                 });
+                        });
     }
 
     @Override
@@ -76,5 +86,12 @@ public class UserUseCase implements UserService {
         return userRepository.findAll()
                 .doOnNext(u -> logger.info("Se buscan usuarios"));
     }
+
+    @Override
+    public Mono<User> findByDocumentId(String documentId) {
+        return userRepository.findByDocumentId(documentId)
+                .doOnNext(u -> logger.info("Se buscan usuario por medio del documento"));
+    }
+
 
 }

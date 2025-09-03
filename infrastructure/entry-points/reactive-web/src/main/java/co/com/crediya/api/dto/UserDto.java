@@ -17,6 +17,8 @@ public record UserDto(
         @NotBlank(message = "USR_006")
         @Email(message = "USR_003")
         String email,
+        @NotBlank(message = "USR_008")
+        String documentId,
         @NotNull(message = "USR_007")
         @DecimalMin(value = "0.0", message = "USR_004")
         @DecimalMax(value = "15000000.0", message = "USR_004")

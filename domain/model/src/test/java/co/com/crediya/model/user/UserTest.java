@@ -14,7 +14,7 @@ class UserTest {
         LocalDate birthDate = LocalDate.of(1990, 5, 15);
         BigDecimal salary = new BigDecimal("3000.50");
 
-        User user = new User("U123", "John", "Doe", birthDate, "123456789", "john@doe.com", salary);
+        User user = new User("U123", "John", "Doe","123456", birthDate, "123456789", "john@doe.com", salary);
 
         assertEquals("U123", user.getUserId());
         assertEquals("John", user.getFirstName());
@@ -34,6 +34,7 @@ class UserTest {
                 .userId("U456")
                 .firstName("Jane")
                 .lastName("Smith")
+                .documentId("12365")
                 .birthDate(birthDate)
                 .phone("987654321")
                 .email("jane@smith.com")
@@ -58,6 +59,7 @@ class UserTest {
                 .userId("U789")
                 .firstName("Carlos")
                 .lastName("Lopez")
+                .documentId("12365")
                 .birthDate(birthDate)
                 .phone("555555555")
                 .email("carlos@lopez.com")

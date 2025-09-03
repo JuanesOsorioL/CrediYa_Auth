@@ -47,8 +47,11 @@ public class UserDtoMapperTest {
                 "Maria",
                 "Gonzalez",
                 LocalDate.of(1993, 8, 25),
+
                 "+573001234567",
+
                 "maria@example.com",
+                "123456789",
                 new BigDecimal("950000.0")
         );
 
@@ -70,7 +73,7 @@ public class UserDtoMapperTest {
 
     @Test
     void shouldReturnNullWhenUserDtoIsNull() {
-        User user = mapper.toUser(null);
+        User user = mapper.toUser((UserDto) null);
         assertNull(user);
     }
 }

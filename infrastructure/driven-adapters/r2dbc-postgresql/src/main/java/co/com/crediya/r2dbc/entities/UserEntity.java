@@ -18,7 +18,7 @@ import java.time.LocalDate;
 @Setter
 public class UserEntity {
     @Id
-    @Column("Id_Usuario")
+    @Column("id_usuario")
     private String userId;
     @Column("first_name")
     private String firstName;
@@ -27,6 +27,8 @@ public class UserEntity {
     @Column("birth_date")
     private LocalDate birthDate;
     private String phone;
+    @Column("document_id")
+    private String documentId;
     private String email;
     @Column("base_salary")
     private BigDecimal baseSalary;

@@ -6,7 +6,7 @@ adapters:
     port: 5432
     database: "auth"
     schema: "public"
-    username: "creditUserData"
+    username: creditUserData #"creditSolicitudData"
     password: "za4iLVvR8qVq4yQv"
 spring:
   application:
@@ -44,3 +44,4 @@ logging:
 routes:
   user:
     base: /api/v1/usuarios
+    document: /api/v1/usuarios/document

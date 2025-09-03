@@ -39,6 +39,7 @@ class UserReactiveRepositoryAdapterTest {
             "Gomez",
             LocalDate.of(1990, 1, 1),
             "123456789",
+            "123456",
             "john@doe.com",
             BigDecimal.valueOf(18000000.0)
     );
@@ -48,6 +49,7 @@ class UserReactiveRepositoryAdapterTest {
             .email("john@doe.com")
             .firstName("John Doe")
             .lastName("Gomez")
+            .documentId("123456789")
             .birthDate(LocalDate.of(1990, 1, 1))
             .phone("123456789")
             .baseSalary(BigDecimal.valueOf(18000000.0))

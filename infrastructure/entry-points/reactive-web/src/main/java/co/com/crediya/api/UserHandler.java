@@ -1,6 +1,7 @@
 package co.com.crediya.api;
 
 
+import co.com.crediya.api.dto.UserDocumentDto;
 import co.com.crediya.api.dto.UserDto;
 import co.com.crediya.api.exception.ApiResponseBuilder;
 import co.com.crediya.api.logger.GlobalLogger;
@@ -18,7 +19,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Component
@@ -31,23 +31,13 @@ public class UserHandler {
     private final Validator validator;
     private final GlobalLogger logger;
 
-
-    private static final Map<String, UserErrorCode> CODE_TO_ERROR_MAP = Map.of(
-            "USR_001", UserErrorCode.FIRST_NAME_EMPTY,
-            "USR_002", UserErrorCode.LAST_NAME_EMPTY,
-            "USR_003", UserErrorCode.EMAIL_INVALID,
-            "USR_006", UserErrorCode.EMAIL_EMPTY,
-            "USR_004", UserErrorCode.BASE_SALARY_INVALID,
-            "USR_007", UserErrorCode.BASE_SALARY_EMPTY
-    );
-
     private UserErrorCode mapMessageToErrorCode(String code) {
-        return CODE_TO_ERROR_MAP.get(code);
+        return UserErrorCode.fromCode(code);
     }
 
 
-    public Mono<ServerResponse> createUser(ServerRequest request) {
-        return request.bodyToMono(UserDto.class)
+    public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(UserDto.class)
                 .doOnSubscribe(sub -> logger.info("Nueva petición para crear usuario"))
                 .doOnNext(dto -> logger.info("DTO recibido"))
                 .flatMap(dto -> {
@@ -56,7 +46,6 @@ public class UserHandler {
                             .filter(Objects::nonNull)
                             .distinct()
                             .toList();
-
                     if (!infraErrors.isEmpty()) {
                         logger.warn("Validación infra fallida -> errores");
                         return Mono.error(new UserValidationException(infraErrors, List.of()));
@@ -70,6 +59,33 @@ public class UserHandler {
                 })
                 .doOnSuccess(dto -> logger.info("Usuario creado exitosamente"))
                 .flatMap(userDto -> apiResponseBuilder.build(HttpStatus.CREATED, "Usuario creado exitosamente", userDto));
+    }
+
+
+    public Mono<ServerResponse> findByDocumentId(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(UserDocumentDto.class)
+                .doOnSubscribe(sub -> logger.info("Nueva petición para consultar cliente con documento"))
+                .doOnNext(dto -> logger.info("DTO recibido"))
+                .flatMap(dto -> {
+                    List<UserErrorCode> infraErrors = validator.validate(dto).stream()
+                            .map(v -> mapMessageToErrorCode(v.getMessage()))
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .toList();
+                    if (!infraErrors.isEmpty()) {
+                        logger.warn("Validación infra fallida -> errores");
+                        return Mono.error(new UserValidationException(infraErrors, List.of()));
+                    }
+                    User user = userDtoMapper.toUser(dto);
+                    logger.info("Validaciones correctas, transformado a dominio");
+                    return userService.findByDocumentId(user.getDocumentId())
+                            .doOnSubscribe(sub -> logger.info("Invocando UserService.findByDocumentId"))
+                            .switchIfEmpty(Mono.error(new UserValidationException(List.of(UserErrorCode.USER_NOT_FOUND), List.of())))
+                            .doOnNext(u -> logger.info("Usuario encontrado"))
+                            .map(userDtoMapper::toDto);
+                })
+                .doOnSuccess(dto -> logger.info("Usuario consultado exitosamente"))
+                .flatMap(userDto -> apiResponseBuilder.build(HttpStatus.OK, "Usuario encontrado exitosamente", userDto));
     }
 
 

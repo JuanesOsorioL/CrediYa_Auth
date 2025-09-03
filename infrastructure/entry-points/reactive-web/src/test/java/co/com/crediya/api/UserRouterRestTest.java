@@ -1,6 +1,5 @@
 package co.com.crediya.api;
 
-
 import co.com.crediya.api.config.UserPath;
 import co.com.crediya.api.dto.UserDto;
 import co.com.crediya.api.exception.GlobalErrorHandler;
@@ -11,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,24 +28,38 @@ class UserRouterRestTest {
     void setUp() {
         userHandler = Mockito.mock(UserHandler.class);
         errorHandler = Mockito.mock(GlobalErrorHandler.class);
-        userPath= Mockito.mock(UserPath.class);
+        userPath = Mockito.mock(UserPath.class);
 
         when(userPath.getBase()).thenReturn("/api/v1/usuarios");
+        when(userPath.getBase()).thenReturn("/api/v1/usuarios");
+        when(userPath.getBase()).thenReturn("/api/v1/usuarios");
+
+        try {
+            when(userPath.getDocument()).thenReturn("/api/v1/usuarios/{id}");
+        } catch (Throwable ignored) {
+        }
+        try {
+            when(userPath.getDocument()).thenReturn("/api/v1/usuarios/{id}");
+        } catch (Throwable ignored) {
+        }
+        try {
+            when(userPath.getDocument()).thenReturn("/api/v1/usuarios/{id}");
+        } catch (Throwable ignored) {
+        }
 
         when(errorHandler.filter()).thenReturn((request, next) -> next.handle(request));
 
         UserRouterRest routerRest = new UserRouterRest();
-        RouterFunction<ServerResponse> routerFunction = routerRest.routerFunction(userHandler, errorHandler,userPath);
+        RouterFunction<ServerResponse> routerFunction =
+                routerRest.routerFunction(userHandler, errorHandler, userPath);
 
         this.webTestClient = WebTestClient.bindToRouterFunction(routerFunction).build();
     }
 
-
-
     @Test
     void testGETUsuariosRoute() {
         when(userHandler.findAll(any()))
-                .thenReturn(Mono.just(ServerResponse.ok().bodyValue("[]").block()));
+                .thenReturn(ServerResponse.ok().bodyValue("[]"));
 
         webTestClient.get()
                 .uri("/api/v1/usuarios")
@@ -58,13 +70,19 @@ class UserRouterRestTest {
 
     @Test
     void testPOSTUsuariosRoute() {
-        UserDto requestDto = new UserDto( "u01",
-                "John", "Doe", LocalDate.of(1990, 1, 1),
-                "123456789", "john@doe.com", BigDecimal.ONE
+        UserDto requestDto = new UserDto(
+                "u01",
+                "John",
+                "Doe",
+                LocalDate.of(1990, 1, 1),
+                "123456789",
+                "john@doe.com",
+                "123456789",
+                BigDecimal.ONE
         );
 
         when(userHandler.createUser(any()))
-                .thenReturn(Mono.just(ServerResponse.status(HttpStatus.CREATED).build().block()));
+                .thenReturn(ServerResponse.status(HttpStatus.CREATED).build());
 
         webTestClient.post()
                 .uri("/api/v1/usuarios")
