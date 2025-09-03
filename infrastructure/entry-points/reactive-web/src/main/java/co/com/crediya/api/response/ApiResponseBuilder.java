@@ -1,4 +1,4 @@
-package co.com.crediya.api.exception;
+package co.com.crediya.api.response;
 
 import co.com.crediya.api.dto.ApiRespons;
 import lombok.AllArgsConstructor;
@@ -12,10 +12,7 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class ApiResponseBuilder {
     public <T> Mono<ServerResponse> build(HttpStatus status, String message, T body) {
-        ApiRespons<T> response = new ApiRespons<>();
-        response.setStatus(status.value());
-        response.setMessage(message);
-        response.setBody(body);
+        ApiRespons<T> response = new ApiRespons<>(status.value(),message,body);
 
         return ServerResponse.status(status)
                 .contentType(MediaType.parseMediaType("application/json; charset=UTF-8"))

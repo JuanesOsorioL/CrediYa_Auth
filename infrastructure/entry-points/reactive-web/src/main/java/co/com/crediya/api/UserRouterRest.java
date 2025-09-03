@@ -19,6 +19,7 @@ public class UserRouterRest {
                 .POST(userPath.getBase(), handler::createUser, UserOpenApi::createUser)
                 .GET(userPath.getBase(), handler::findAll, UserOpenApi::findAll)
                 .POST(userPath.getDocument(), handler::findByDocumentId, UserOpenApi::findByDocumentId)
+                .POST(userPath.getLogin(), handler::login, UserOpenApi::findByDocumentId)
                 .build()
                 .filter(errorHandler.filter());
     }

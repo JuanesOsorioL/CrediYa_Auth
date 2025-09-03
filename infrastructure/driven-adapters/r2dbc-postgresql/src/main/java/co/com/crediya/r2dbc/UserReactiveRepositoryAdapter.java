@@ -35,5 +35,10 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         return repository.existsByDocumentId(documentId);
     }
 
+    @Override
+    public Mono<User> findIsExist(String email, String password) {
+        return repository.findByEmailAndPassword(email, password);
+    }
+
 
 }

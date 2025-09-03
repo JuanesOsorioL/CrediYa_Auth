@@ -1,11 +1,13 @@
 package co.com.crediya.api;
 
 
+import co.com.crediya.api.dto.LoginDto;
 import co.com.crediya.api.dto.UserDocumentDto;
 import co.com.crediya.api.dto.UserDto;
-import co.com.crediya.api.exception.ApiResponseBuilder;
 import co.com.crediya.api.logger.GlobalLogger;
 import co.com.crediya.api.mapper.UserDtoMapper;
+import co.com.crediya.api.response.ApiResponseBuilder;
+import co.com.crediya.api.segurity.AuthenticationService;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.UserService;
 import co.com.crediya.usecase.user.exception.UserErrorCode;
@@ -30,6 +32,7 @@ public class UserHandler {
     private final UserDtoMapper userDtoMapper;
     private final Validator validator;
     private final GlobalLogger logger;
+    private final AuthenticationService authenticationService;
 
     private UserErrorCode mapMessageToErrorCode(String code) {
         return UserErrorCode.fromCode(code);
@@ -101,5 +104,33 @@ public class UserHandler {
                 .onErrorResume(e -> apiResponseBuilder.build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", List.of("Error al recuperar usuarios")));
     }
 
+
+
+    public Mono<ServerResponse> login(ServerRequest serverRequest) {
+        return serverRequest.bodyToMono(LoginDto.class)
+                .doOnSubscribe(sub -> logger.info("Nueva petición para consultar si las credenciales son validas"))
+                .doOnNext(dto -> logger.info("DTO recibido"))
+                .flatMap(dto -> {
+                    List<UserErrorCode> infraErrors = validator.validate(dto).stream()
+                            .map(v -> mapMessageToErrorCode(v.getMessage()))
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .toList();
+                    if (!infraErrors.isEmpty()) {
+                        logger.warn("Validación infra fallida -> errores");
+                        return Mono.error(new UserValidationException(infraErrors, List.of()));
+                    }
+                    return Mono.just(dto);
+                }).map(userDtoMapper::toUserL)
+                .flatMap(userService::findIsExist)
+                .doOnSubscribe(sub -> logger.info("findIsExist suscrito  "))
+                .map(authenticationService::generateToken)
+                .doOnSubscribe(sub -> logger.info("findIsExist suscrito"))
+                .doOnNext(u -> logger.info("Se retorna el Usuario"))
+                .doOnSuccess(string -> logger.info("Usuario consultado exitosamente "))
+                .flatMap(stringkey -> apiResponseBuilder.build(HttpStatus.CREATED, "Usuario creado exitosamente ", stringkey));
+
+
+    }
 
 }

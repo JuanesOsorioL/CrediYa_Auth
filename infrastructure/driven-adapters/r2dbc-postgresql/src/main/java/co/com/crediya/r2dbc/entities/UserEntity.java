@@ -29,7 +29,10 @@ public class UserEntity {
     private String phone;
     @Column("document_id")
     private String documentId;
+    @Column("rol_id")
+    private String rolId;
     private String email;
+    private String password;
     @Column("base_salary")
     private BigDecimal baseSalary;
 }

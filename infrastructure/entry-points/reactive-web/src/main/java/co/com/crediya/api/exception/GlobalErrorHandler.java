@@ -1,6 +1,7 @@
 package co.com.crediya.api.exception;
 
 import co.com.crediya.api.logger.GlobalLogger;
+import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.usecase.user.exception.UserErrorCode;
 import co.com.crediya.usecase.user.exception.UserValidationException;
 import org.springframework.http.HttpStatus;

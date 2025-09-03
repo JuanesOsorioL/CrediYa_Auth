@@ -2,12 +2,11 @@ package co.com.crediya.api;
 
 import co.com.crediya.api.dto.UserDocumentDto;
 import co.com.crediya.api.dto.UserDto;
-import co.com.crediya.api.exception.ApiResponseBuilder;
+import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.api.logger.GlobalLogger;
 import co.com.crediya.api.mapper.UserDtoMapper;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.user.UserService;
-import co.com.crediya.usecase.user.exception.UserErrorCode;
 import co.com.crediya.usecase.user.exception.UserValidationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;

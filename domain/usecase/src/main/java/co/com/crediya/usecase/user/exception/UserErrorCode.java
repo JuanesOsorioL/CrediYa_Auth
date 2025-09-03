@@ -18,6 +18,8 @@ public enum UserErrorCode {
     DOCUMENT_EMPTY("USR_008", "El Documento no puede ser vacío"),
     USER_NOT_FOUND("USR_009", "Cliente no encontrado"),
     DOCUMENT_ALREADY_REGISTERED("USR_010", "El Documento ingresado ya existe"),
+    PASSWORD_EMPTY("USR_011", "El Password no puede ser vacío"),
+    ROL_EMPTY("USR_012", "El Rol no puede ser vacío"),
     EMAIL_EMPTY("USR_006", "El correo electrónico no puede ser vacío");
 
     private final String code;

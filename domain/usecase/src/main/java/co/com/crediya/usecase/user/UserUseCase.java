@@ -1,5 +1,6 @@
 package co.com.crediya.usecase.user;
 
+import co.com.crediya.model.login.Login;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.usecase.user.exception.UserErrorCode;
@@ -91,6 +92,12 @@ public class UserUseCase implements UserService {
     public Mono<User> findByDocumentId(String documentId) {
         return userRepository.findByDocumentId(documentId)
                 .doOnNext(u -> logger.info("Se buscan usuario por medio del documento"));
+    }
+
+    @Override
+    public Mono<User> findIsExist(Login login) {
+        return userRepository.findIsExist(login.getEmail(), login.getPassword())
+                .doOnNext(u -> logger.info("prueba "+u.getEmail()+" "));
     }
 
 
