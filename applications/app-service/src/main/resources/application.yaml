@@ -44,4 +44,3 @@ logging:
 routes:
   user:
     base: /api/v1/usuarios
-    document: /api/v1/usuarios/document
