@@ -1,0 +1,13 @@
+package co.com.crediya.model.user.gateways;
+
+import co.com.crediya.model.user.User;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public interface UserRepository {
+    Mono<User> save(User user);
+    Flux<User> findAll();
+    Mono<Boolean> existsByEmail(String email);
+    Mono<User> findByDocumentId(String documentId);
+    Mono<Boolean> existUserByDocumentId(String documentId);
+}
