@@ -1,6 +1,6 @@
 package co.com.crediya.api.response;
 
-import co.com.crediya.api.dto.ApiRespons;
+import co.com.crediya.api.dto.respons.ApiRespons;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

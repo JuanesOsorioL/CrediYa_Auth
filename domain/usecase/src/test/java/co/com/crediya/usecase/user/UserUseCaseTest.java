@@ -2,9 +2,9 @@ package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
-import co.com.crediya.usecase.user.exception.UserErrorCode;
-import co.com.crediya.usecase.user.exception.UserValidationException;
-import co.com.crediya.usecase.user.logger.Logger;
+import co.com.crediya.model.exception.UserErrorCode;
+import co.com.crediya.usecase.exception.UserValidationException;
+import co.com.crediya.usecase.logger.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

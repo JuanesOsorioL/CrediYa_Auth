@@ -2,8 +2,8 @@ package co.com.crediya.api.exception;
 
 import co.com.crediya.api.logger.GlobalLogger;
 import co.com.crediya.api.response.ApiResponseBuilder;
-import co.com.crediya.usecase.user.exception.UserErrorCode;
-import co.com.crediya.usecase.user.exception.UserValidationException;
+import co.com.crediya.model.exception.UserErrorCode;
+import co.com.crediya.usecase.exception.UserValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.HandlerFilterFunction;

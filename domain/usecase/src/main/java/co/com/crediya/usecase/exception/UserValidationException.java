@@ -1,5 +1,6 @@
-package co.com.crediya.usecase.user.exception;
+package co.com.crediya.usecase.exception;
 
+import co.com.crediya.model.exception.UserErrorCode;
 import lombok.Getter;
 
 import java.util.List;

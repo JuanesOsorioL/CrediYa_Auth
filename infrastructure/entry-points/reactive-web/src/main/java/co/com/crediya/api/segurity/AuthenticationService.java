@@ -1,6 +1,6 @@
 package co.com.crediya.api.segurity;
 
-import co.com.crediya.model.user.User;
+import co.com.crediya.api.dto.login.TokenClaimsDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -10,7 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
 
 
 @Component
@@ -23,16 +24,22 @@ public class AuthenticationService {
     private Long expirationTime;
 
 
-    public String generateToken(User user) {
+    private SecretKey getSingInKey() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    }
+
+
+    public String generateToken(TokenClaimsDto tokenClaimsDto) {
         Map<String, Object> claims = Map.of(
-                "FistName", user.getFirstName(),
-                "LastName", user.getLastName(),
-                "Role", user.getRolId()
+                "FistName", tokenClaimsDto.firstName(),
+                "LastName", tokenClaimsDto.lastName(),
+                "Document", tokenClaimsDto.documentId(),
+                "Rol", tokenClaimsDto.rolName()
         );
         return Jwts.builder()
-                .id(user.getUserId())
+                .id(tokenClaimsDto.userId())
                 .claims(claims)
-                .subject(user.getEmail())
+                .subject(tokenClaimsDto.email())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSingInKey())
@@ -41,138 +48,64 @@ public class AuthenticationService {
     }
 
 
-    private SecretKey getSingInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-
-    }
-
-
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser()
-                    .verifyWith(getSingInKey())
-                    .build()
-                    .parseSignedClaims(token);
-            return true;
-        } catch (JwtException e) {
-            return false;
-        }
-    }
+//    public boolean validateToken(String token) {
+//        try {
+//            Claims claims = Jwts.parser()
+//                    .verifyWith(key)
+//                    .build()
+//                    .parseSignedClaims(token)
+//                    .getPayload();
+//
+//            if (claims != null) {
+//                return true;
+//            } else {
+//                return false;
+//            }
+//        } catch (JwtException e) {
+//            return false;
+//        }
+//    }
 
     public Claims validateTokenAndGetClaims(String token) {
-        return new Claims() {
-            @Override
-            public String getIssuer() {
-                return "";
-            }
-
-            @Override
-            public String getSubject() {
-                return "";
-            }
-
-            @Override
-            public Set<String> getAudience() {
-                return Set.of();
-            }
-
-            @Override
-            public Date getExpiration() {
-                return null;
-            }
-
-            @Override
-            public Date getNotBefore() {
-                return null;
-            }
-
-            @Override
-            public Date getIssuedAt() {
-                return null;
-            }
-
-            @Override
-            public String getId() {
-                return "";
-            }
-
-            @Override
-            public <T> T get(String s, Class<T> aClass) {
-                return null;
-            }
-
-            @Override
-            public int size() {
-                return 0;
-            }
-
-            @Override
-            public boolean isEmpty() {
-                return false;
-            }
-
-            @Override
-            public boolean containsKey(Object key) {
-                return false;
-            }
-
-            @Override
-            public boolean containsValue(Object value) {
-                return false;
-            }
-
-            @Override
-            public Object get(Object key) {
-                return null;
-            }
-
-            @Override
-            public Object put(String key, Object value) {
-                return null;
-            }
-
-            @Override
-            public Object remove(Object key) {
-                return null;
-            }
-
-            @Override
-            public void putAll(Map<? extends String, ?> m) {
-
-            }
-
-            @Override
-            public void clear() {
-
-            }
-
-            @Override
-            public Set<String> keySet() {
-                return Set.of();
-            }
-
-            @Override
-            public Collection<Object> values() {
-                return List.of();
-            }
-
-            @Override
-            public Set<Entry<String, Object>> entrySet() {
-                return Set.of();
-            }
-        };
-    }
-/*
-    public Claims parseJwt(String token) {
         try {
-            return Jwts.parser()
-                    .setSigningKey(getSigningKey())  // Usamos la clave secreta para verificar la firma
-                    .parseClaimsJws(token)  // Parseamos y validamos el JWT
-                    .getBody();  // Devuelve el cuerpo (claims) del token
+            return Jwts.parser() //Jwts.parserBuilder()
+                    .verifyWith(getSingInKey())//   .setSigningKey(getSingInKey())
+                    .build()//   .build()
+                    .parseSignedClaims(token)//  .parseClaimsJws(token)
+                    .getPayload(); // .getBody();
         } catch (JwtException e) {
-
-            return null;  // Si ocurre una excepción, el token no es válido
+            return null;
         }
-    }*/
+    }
+
+
+//
+//    public Claims validateTokenDos(String token) {
+//        try {
+//             return Jwts.parser()
+//                    .verifyWith(key)
+//                    .build()
+//                    .parseSignedClaims(token)
+//                    .getPayload();
+//
+//        } catch (JwtException e) {
+//            return null;
+//        }
+//    }
+
+//
+//    public Claims validateTokenDosss(String token) {
+//        try {
+//
+//            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+//
+//            //OK, we can trust this JWT
+//
+//        } catch (JwtException e) {
+//
+//            //don't trust the JWT!
+//        }
+//    }
+
+
 }

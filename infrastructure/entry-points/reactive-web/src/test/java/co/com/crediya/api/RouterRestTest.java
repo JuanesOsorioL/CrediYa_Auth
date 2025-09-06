@@ -1,7 +1,7 @@
 package co.com.crediya.api;
 
 import co.com.crediya.api.config.UserPath;
-import co.com.crediya.api.dto.UserDto;
+import co.com.crediya.api.dto.user.UserDto;
 import co.com.crediya.api.exception.GlobalErrorHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-class UserRouterRestTest {
+class RouterRestTest {
 
     private WebTestClient webTestClient;
     private UserHandler userHandler;
@@ -49,7 +49,7 @@ class UserRouterRestTest {
 
         when(errorHandler.filter()).thenReturn((request, next) -> next.handle(request));
 
-        UserRouterRest routerRest = new UserRouterRest();
+        RouterRest routerRest = new RouterRest();
         RouterFunction<ServerResponse> routerFunction =
                 routerRest.routerFunction(userHandler, errorHandler, userPath);
 
@@ -78,6 +78,7 @@ class UserRouterRestTest {
                 "123456789",
                 "john@doe.com",
                 "123456789",
+                "123","12222",
                 BigDecimal.ONE
         );
 

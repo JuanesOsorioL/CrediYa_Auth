@@ -1,4 +1,4 @@
-package co.com.crediya.usecase.user.logger;
+package co.com.crediya.usecase.logger;
 
 public interface Logger {
     void info(String message);

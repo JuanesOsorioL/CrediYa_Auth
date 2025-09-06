@@ -1,4 +1,4 @@
-package co.com.crediya.r2dbc;
+package co.com.crediya.r2dbc.user;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.r2dbc.entities.UserEntity;

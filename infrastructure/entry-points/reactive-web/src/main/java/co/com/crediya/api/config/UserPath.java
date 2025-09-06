@@ -11,4 +11,6 @@ public class UserPath {
     private String base;
     private String document;
     private String login;
+    private String validateToken;
+    private String allUsers;
 }

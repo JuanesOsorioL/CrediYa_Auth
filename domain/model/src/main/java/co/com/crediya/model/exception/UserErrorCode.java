@@ -1,4 +1,4 @@
-package co.com.crediya.usecase.user.exception;
+package co.com.crediya.model.exception;
 
 import lombok.Getter;
 
@@ -20,6 +20,10 @@ public enum UserErrorCode {
     DOCUMENT_ALREADY_REGISTERED("USR_010", "El Documento ingresado ya existe"),
     PASSWORD_EMPTY("USR_011", "El Password no puede ser vacío"),
     ROL_EMPTY("USR_012", "El Rol no puede ser vacío"),
+    ROL_NOT_FOUND("USR_013", "Rol no encontrado"),
+    TOKEN_EMPTY("USR_014", "Token no proporcionado"),
+    TOKEN_INVALID("USR_015", "Token invalido"),
+    YOU_DONT_HAVE_PERMISSION("USR_016", "No tienes permisos para acceder a este recurso"),
     EMAIL_EMPTY("USR_006", "El correo electrónico no puede ser vacío");
 
     private final String code;

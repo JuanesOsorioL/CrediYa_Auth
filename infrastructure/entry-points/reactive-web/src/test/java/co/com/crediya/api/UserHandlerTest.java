@@ -1,13 +1,13 @@
 package co.com.crediya.api;
 
-import co.com.crediya.api.dto.UserDocumentDto;
-import co.com.crediya.api.dto.UserDto;
+import co.com.crediya.api.dto.user.UserDocumentDto;
+import co.com.crediya.api.dto.user.UserDto;
 import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.api.logger.GlobalLogger;
-import co.com.crediya.api.mapper.UserDtoMapper;
+import co.com.crediya.api.mapper.GenericDtoMapper;
 import co.com.crediya.model.user.User;
-import co.com.crediya.usecase.user.UserService;
-import co.com.crediya.usecase.user.exception.UserValidationException;
+import co.com.crediya.usecase.user.gateways.UserService;
+import co.com.crediya.usecase.exception.UserValidationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ class UserHandlerTest {
     private UserService userService;
 
     @Mock
-    private UserDtoMapper userDtoMapper;
+    private GenericDtoMapper userDtoMapper;
 
     @Mock
     private Validator validator;
