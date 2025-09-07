@@ -1,5 +1,6 @@
 package co.com.crediya.api.filter;
 
+import co.com.crediya.api.dto.login.TokenDto;
 import co.com.crediya.api.segurity.AuthenticationService;
 import co.com.crediya.model.exception.UserErrorCode;
 import co.com.crediya.usecase.exception.UserValidationException;
@@ -42,11 +43,14 @@ public class AuthFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        String token = request.getHeaders().getFirst("Authorization");
+        String header = request.getHeaders().getFirst("Authorization");
+        //logger.info("Token "+token+" ");
 
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
+        if (header != null && header.startsWith("Bearer ")) {
+            header = header.substring(7);
+            TokenDto token =new TokenDto(header);
 
+            // logger.info("Token "+token+" ");
             Claims claims = authenticationService.validateTokenAndGetClaims(token);
 
             if (claims != null) {
@@ -61,12 +65,11 @@ public class AuthFilter implements WebFilter {
                     return Mono.error(new UserValidationException(List.of(UserErrorCode.YOU_DONT_HAVE_PERMISSION), List.of()));
                 }
             } else {
-                logger.info("Token inválido");
+                logger.info("Token inválido, llega null");
                 // return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token inválido"));
                 return Mono.error(new UserValidationException(List.of(UserErrorCode.TOKEN_INVALID), List.of()));
             }
         } else {
-            // Si no hay token
             logger.info("Token no proporcionado");
             // return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token no proporcionado"));
             return Mono.error(new UserValidationException(List.of(UserErrorCode.TOKEN_EMPTY), List.of()));
@@ -78,7 +81,7 @@ public class AuthFilter implements WebFilter {
 
         String path = request.getURI().getPath();
         if (path.startsWith("/api/v1/usuarios")) {
-            return role.equals("Admin") || role.equals("Advisor");
+            return role.equals("Admin") || role.equals("Adviser");
         }
 
         if (path.startsWith("/api/v1/solicitud")) {

@@ -3,6 +3,7 @@ package co.com.crediya.api;
 
 import co.com.crediya.api.dto.login.LoginDto;
 import co.com.crediya.api.dto.login.TokenClaimsDto;
+import co.com.crediya.api.dto.login.TokenDto;
 import co.com.crediya.api.dto.user.UserDocumentDto;
 import co.com.crediya.api.dto.user.UserDto;
 import co.com.crediya.api.logger.GlobalLogger;
@@ -74,8 +75,8 @@ public class UserHandler {
                                 role.getName()
                         ))).doOnNext(tokenclaismodto -> logger.info("se crea un TokenClaimsDto"))
                 .flatMap(tokenClaimsDto -> {
-                    String token = authenticationService.generateToken(tokenClaimsDto);
-                    return apiResponseBuilder.build(HttpStatus.OK, "Usuario logueado exitosamente", token);
+                    TokenDto token = authenticationService.generateToken(tokenClaimsDto);
+                    return apiResponseBuilder.build(HttpStatus.OK, "Usuario logueado exitosamente", token.token());
                 })
                 .doOnSuccess(l -> logger.info("Usuario autenticado exitosamente"));
     }
@@ -151,29 +152,32 @@ public class UserHandler {
 
     public Mono<ServerResponse> validateToken(ServerRequest serverRequest) {
         logger.info("UserHandler -> validateToken : inicia el flujo.");
-        String token = serverRequest.headers().header("Authorization").stream()
-                .filter(authHeader -> authHeader.startsWith("Bearer "))
+
+        String authHeader = serverRequest.headers()
+                .header("Authorization")
+                .stream()
+                .filter(header -> header.startsWith("Bearer "))
                 .findFirst()
                 .orElse(null);
 
-        if (token == null) {
+        if (authHeader == null || authHeader.isBlank()) {
             logger.info("UserHandler -> validateToken : Token no proporcionado");
             return apiResponseBuilder.build(HttpStatus.UNAUTHORIZED, "Token no proporcionado", null);
         }
-        String tokenSinBearer = token.replace("Bearer ", "").trim();
 
-        return Mono.just(tokenSinBearer)
-                .doOnSubscribe(sub -> logger.info("UserHandler -> validateToken : Iniciando validación del token " + tokenSinBearer + " "))
-                .flatMap(stringToken -> {
-                    // Validar el token
-                    Claims claims = authenticationService.validateTokenAndGetClaims(stringToken);
+        String tokenSinBearer = authHeader.replace("Bearer ", "").trim();
+        TokenDto tokenDto = new TokenDto(tokenSinBearer);
+
+        return Mono.just(tokenDto)
+                .doOnNext(token -> logger.info("UserHandler -> validateToken : Iniciando validación del token"))
+                .flatMap(tokenDton -> {
+                    Claims claims = authenticationService.validateTokenAndGetClaims(tokenDton);
                     if (claims == null) {
-                        // Si los claims no se pueden extraer o el token es inválido
-                        logger.info("UserHandler -> validateToken : Token inválido: " + stringToken);
+
+                        logger.info("UserHandler -> validateToken : Token inválido");
                         return Mono.error(new UserValidationException(List.of(UserErrorCode.TOKEN_INVALID), List.of()));
                     }
-                    logger.info("UserHandler -> validateToken : Token válido, extrayendo claims " + claims.getId() + " " + claims.getIssuer() + " " + claims.getSubject() + "  " + claims.getExpiration() + " " + claims.getIssuedAt() + " " + claims.getNotBefore() + "   ");
-                    // Devuelve los claims en la respuesta
+                    logger.info("UserHandler -> validateToken : Token válido, Se envían claims");
                     return apiResponseBuilder.build(HttpStatus.OK, "Se envían claims", claims);
                 });
 

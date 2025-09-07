@@ -19,20 +19,6 @@ public class WebConfig {
 
     @Bean
     public WebFilter authFilter(AuthenticationService authenticationService) {
-        // Spring WebFlux registrará este WebFilter globalmente
         return new AuthFilter(authenticationService,logger);
     }
-
-//    private final ApplicationContext applicationContext;
-//
-//    public WebConfig(ApplicationContext applicationContext) {
-//        this.applicationContext = applicationContext;
-//    }
-//
-//    @Bean
-//    public WebHttpHandlerBuilder webHttpHandlerBuilder(AuthenticationService authenticationService) {
-//        WebFilter authFilter = new AuthFilter(authenticationService);
-//        return WebHttpHandlerBuilder.applicationContext(applicationContext)
-//                .filters(filters -> filters.add(authFilter));
-//    }
 }

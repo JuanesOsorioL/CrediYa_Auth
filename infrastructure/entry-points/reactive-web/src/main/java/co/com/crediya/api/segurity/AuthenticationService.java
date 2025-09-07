@@ -1,6 +1,7 @@
 package co.com.crediya.api.segurity;
 
 import co.com.crediya.api.dto.login.TokenClaimsDto;
+import co.com.crediya.api.dto.login.TokenDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -29,83 +30,34 @@ public class AuthenticationService {
     }
 
 
-    public String generateToken(TokenClaimsDto tokenClaimsDto) {
+    public TokenDto generateToken(TokenClaimsDto tokenClaimsDto) {
         Map<String, Object> claims = Map.of(
                 "FistName", tokenClaimsDto.firstName(),
                 "LastName", tokenClaimsDto.lastName(),
                 "Document", tokenClaimsDto.documentId(),
                 "Rol", tokenClaimsDto.rolName()
         );
-        return Jwts.builder()
+        return new TokenDto(Jwts.builder()
                 .id(tokenClaimsDto.userId())
                 .claims(claims)
                 .subject(tokenClaimsDto.email())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSingInKey())
-                .compact();
+                .compact());
 
     }
 
-
-//    public boolean validateToken(String token) {
-//        try {
-//            Claims claims = Jwts.parser()
-//                    .verifyWith(key)
-//                    .build()
-//                    .parseSignedClaims(token)
-//                    .getPayload();
-//
-//            if (claims != null) {
-//                return true;
-//            } else {
-//                return false;
-//            }
-//        } catch (JwtException e) {
-//            return false;
-//        }
-//    }
-
-    public Claims validateTokenAndGetClaims(String token) {
+    public Claims validateTokenAndGetClaims(TokenDto token) {
         try {
-            return Jwts.parser() //Jwts.parserBuilder()
-                    .verifyWith(getSingInKey())//   .setSigningKey(getSingInKey())
-                    .build()//   .build()
-                    .parseSignedClaims(token)//  .parseClaimsJws(token)
-                    .getPayload(); // .getBody();
+            return Jwts.parser()
+                    .verifyWith(getSingInKey())
+                    .build()
+                    .parseSignedClaims(token.token())
+                    .getPayload();
         } catch (JwtException e) {
             return null;
         }
     }
-
-
-//
-//    public Claims validateTokenDos(String token) {
-//        try {
-//             return Jwts.parser()
-//                    .verifyWith(key)
-//                    .build()
-//                    .parseSignedClaims(token)
-//                    .getPayload();
-//
-//        } catch (JwtException e) {
-//            return null;
-//        }
-//    }
-
-//
-//    public Claims validateTokenDosss(String token) {
-//        try {
-//
-//            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-//
-//            //OK, we can trust this JWT
-//
-//        } catch (JwtException e) {
-//
-//            //don't trust the JWT!
-//        }
-//    }
-
 
 }
