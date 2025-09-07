@@ -1,4 +1,4 @@
-package co.com.crediya.r2dbc;
+package co.com.crediya.r2dbc.user;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
@@ -33,6 +33,11 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     @Override
     public Mono<Boolean> existUserByDocumentId(String documentId) {
         return repository.existsByDocumentId(documentId);
+    }
+
+    @Override
+    public Mono<User> findIsExist(String email, String password) {
+        return repository.findByEmailAndPassword(email, password);
     }
 
 

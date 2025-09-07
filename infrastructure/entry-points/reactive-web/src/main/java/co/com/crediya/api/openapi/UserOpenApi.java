@@ -2,8 +2,8 @@ package co.com.crediya.api.openapi;
 
 
 
-import co.com.crediya.api.dto.UserDocumentDto;
-import co.com.crediya.api.dto.UserDto;
+import co.com.crediya.api.dto.user.UserDocumentDto;
+import co.com.crediya.api.dto.user.UserDto;
 import co.com.crediya.model.user.User;
 import lombok.experimental.UtilityClass;
 import org.springdoc.core.fn.builders.operation.Builder;

@@ -2,6 +2,8 @@ package co.com.crediya.r2dbc;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.r2dbc.entities.UserEntity;
+import co.com.crediya.r2dbc.user.UserReactiveRepository;
+import co.com.crediya.r2dbc.user.UserReactiveRepositoryAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

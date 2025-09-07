@@ -1,4 +1,4 @@
-package co.com.crediya.r2dbc;
+package co.com.crediya.r2dbc.user;
 
 import co.com.crediya.model.user.User;
 import co.com.crediya.r2dbc.entities.UserEntity;
@@ -11,4 +11,5 @@ public interface UserReactiveRepository extends ReactiveCrudRepository<UserEntit
     Mono<Boolean> existsByEmail(String email);
     Mono<User> findByDocumentId(String documentId);
     Mono<Boolean> existsByDocumentId(String documentId);
+    Mono<User> findByEmailAndPassword(String email, String password);
 }

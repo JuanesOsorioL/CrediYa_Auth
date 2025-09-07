@@ -45,3 +45,10 @@ routes:
   user:
     base: /api/v1/usuarios
     document: /api/v1/usuarios/document
+    login: /api/v1/login
+    validateToken: /api/v1/validateToken
+    allUsers: /api/v1/usuarios/allUsers
+
+jwt:
+  secret: "yW9kMHFmQmQzUGxwM0NnNGcyZ1kzZzdXwqGZz/GePgs="
+  expiration: 3600000

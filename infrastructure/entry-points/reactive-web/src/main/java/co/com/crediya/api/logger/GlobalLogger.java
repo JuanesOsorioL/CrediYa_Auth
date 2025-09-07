@@ -1,7 +1,7 @@
 package co.com.crediya.api.logger;
 
 
-import co.com.crediya.usecase.user.logger.Logger;
+import co.com.crediya.usecase.logger.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 

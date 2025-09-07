@@ -10,4 +10,5 @@ public interface UserRepository {
     Mono<Boolean> existsByEmail(String email);
     Mono<User> findByDocumentId(String documentId);
     Mono<Boolean> existUserByDocumentId(String documentId);
+    Mono<User> findIsExist(String email, String password);
 }

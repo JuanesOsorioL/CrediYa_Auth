@@ -3,7 +3,7 @@ package co.com.crediya.config;
 
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.usecase.user.UserUseCase;
-import co.com.crediya.usecase.user.logger.Logger;
+import co.com.crediya.usecase.logger.Logger;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

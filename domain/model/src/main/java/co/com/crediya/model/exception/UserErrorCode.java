@@ -1,4 +1,4 @@
-package co.com.crediya.usecase.user.exception;
+package co.com.crediya.model.exception;
 
 import lombok.Getter;
 
@@ -18,6 +18,12 @@ public enum UserErrorCode {
     DOCUMENT_EMPTY("USR_008", "El Documento no puede ser vacío"),
     USER_NOT_FOUND("USR_009", "Cliente no encontrado"),
     DOCUMENT_ALREADY_REGISTERED("USR_010", "El Documento ingresado ya existe"),
+    PASSWORD_EMPTY("USR_011", "El Password no puede ser vacío"),
+    ROL_EMPTY("USR_012", "El Rol no puede ser vacío"),
+    ROL_NOT_FOUND("USR_013", "Rol no encontrado"),
+    TOKEN_EMPTY("USR_014", "Token no proporcionado"),
+    TOKEN_INVALID("USR_015", "Token invalido"),
+    YOU_DONT_HAVE_PERMISSION("USR_016", "No tienes permisos para acceder a este recurso"),
     EMAIL_EMPTY("USR_006", "El correo electrónico no puede ser vacío");
 
     private final String code;
@@ -30,7 +36,6 @@ public enum UserErrorCode {
 
     private static final Map<String, UserErrorCode> CODE_MAP = Stream.of(values())
             .collect(Collectors.toMap(UserErrorCode::getCode, e -> e));
-
 
     public static UserErrorCode fromCode(String code) {
         return CODE_MAP.get(code);

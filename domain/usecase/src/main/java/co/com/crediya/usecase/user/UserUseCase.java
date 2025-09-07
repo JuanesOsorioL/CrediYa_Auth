@@ -1,10 +1,12 @@
 package co.com.crediya.usecase.user;
 
+import co.com.crediya.model.exception.UserErrorCode;
+import co.com.crediya.model.login.Login;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
-import co.com.crediya.usecase.user.exception.UserErrorCode;
-import co.com.crediya.usecase.user.exception.UserValidationException;
-import co.com.crediya.usecase.user.logger.Logger;
+import co.com.crediya.usecase.exception.UserValidationException;
+import co.com.crediya.usecase.logger.Logger;
+import co.com.crediya.usecase.user.gateways.UserService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -58,27 +60,27 @@ public class UserUseCase implements UserService {
 
         return userRepository.existUserByDocumentId(user.getDocumentId())
                 .doOnSubscribe(u -> logger.info("Se Verifica si ya existe el documento de identidad"))
-                        .flatMap(exist -> {
-                                    if (exist) {
-                                        logger.info("Documento de identidad ya existe");
-                                        return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.DOCUMENT_ALREADY_REGISTERED)));
-                                    }
-
-        logger.info("Se Verifica si correo ya existe");
-        return userRepository.existsByEmail(user.getEmail())
-                .flatMap(emailExists -> {
-                    if (emailExists) {
-                        logger.info("Correo si existe");
-                        return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.EMAIL_ALREADY_REGISTERED)));
+                .flatMap(exist -> {
+                    if (exist) {
+                        logger.info("Documento de identidad ya existe");
+                        return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.DOCUMENT_ALREADY_REGISTERED)));
                     }
-                    logger.info("Correo No existe, se agrega un UUID para guardarlo");
-                    User withId = user.toBuilder()
-                            .userId(UUID.randomUUID().toString())
-                            .build();
-                    return userRepository.save(withId)
-                            .doOnNext(u -> logger.info("Usuario guardado con id "));
+
+                    logger.info("Se Verifica si correo ya existe");
+                    return userRepository.existsByEmail(user.getEmail())
+                            .flatMap(emailExists -> {
+                                if (emailExists) {
+                                    logger.info("Correo si existe");
+                                    return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.EMAIL_ALREADY_REGISTERED)));
+                                }
+                                logger.info("Correo No existe, se agrega un UUID para guardarlo");
+                                User withId = user.toBuilder()
+                                        .userId(UUID.randomUUID().toString())
+                                        .build();
+                                return userRepository.save(withId)
+                                        .doOnNext(u -> logger.info("Usuario guardado con id "));
+                            });
                 });
-                        });
     }
 
     @Override
@@ -91,6 +93,12 @@ public class UserUseCase implements UserService {
     public Mono<User> findByDocumentId(String documentId) {
         return userRepository.findByDocumentId(documentId)
                 .doOnNext(u -> logger.info("Se buscan usuario por medio del documento"));
+    }
+
+    @Override
+    public Mono<User> findIsExist(Login login) {
+        return userRepository.findIsExist(login.getEmail(), login.getPassword())
+                .doOnNext(u -> logger.info("prueba " + u.getEmail() + " "));
     }
 
 

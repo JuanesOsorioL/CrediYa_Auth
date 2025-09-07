@@ -1,14 +1,13 @@
 package co.com.crediya.api;
 
-import co.com.crediya.api.dto.UserDocumentDto;
-import co.com.crediya.api.dto.UserDto;
-import co.com.crediya.api.exception.ApiResponseBuilder;
+import co.com.crediya.api.dto.user.UserDocumentDto;
+import co.com.crediya.api.dto.user.UserDto;
+import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.api.logger.GlobalLogger;
-import co.com.crediya.api.mapper.UserDtoMapper;
+import co.com.crediya.api.mapper.GenericDtoMapper;
 import co.com.crediya.model.user.User;
-import co.com.crediya.usecase.user.UserService;
-import co.com.crediya.usecase.user.exception.UserErrorCode;
-import co.com.crediya.usecase.user.exception.UserValidationException;
+import co.com.crediya.usecase.user.gateways.UserService;
+import co.com.crediya.usecase.exception.UserValidationException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +44,7 @@ class UserHandlerTest {
     private UserService userService;
 
     @Mock
-    private UserDtoMapper userDtoMapper;
+    private GenericDtoMapper userDtoMapper;
 
     @Mock
     private Validator validator;
@@ -211,26 +210,19 @@ class UserHandlerTest {
     }
     @Test
     void testFindByDocumentIdSuccess() {
-        // DTO con el documento
         UserDocumentDto docDto = new UserDocumentDto("DOC-123456");
 
-        // Usuario devuelto por el dominio
         User user = new User("1","John","Doe","DOC-123456",
                 LocalDate.of(1990,1,1),"3000000000","john@doe.com", BigDecimal.valueOf(1_000_000));
 
-        // DTO de salida
         UserDto userDto = new UserDto("u01","John","Doe",
                 LocalDate.of(1990,1,1),"DOC-123456","john@doe.com","3000000000", BigDecimal.valueOf(1_000_000));
 
-        // Validación infra OK
+
         when(validator.validate(any(UserDocumentDto.class))).thenReturn(Set.of());
-        // Mapear DTO -> dominio (solo necesita documentId)
         when(userDtoMapper.toUser(any(UserDocumentDto.class))).thenReturn(user);
-        // Service encuentra usuario
         when(userService.findByDocumentId("DOC-123456")).thenReturn(Mono.just(user));
-        // Mapear dominio -> DTO
         when(userDtoMapper.toDto(user)).thenReturn(userDto);
-        // Respuesta exitosa
         when(apiResponseBuilder.build(eq(HttpStatus.OK), anyString(), eq(userDto)))
                 .thenAnswer(inv -> ServerResponse.status(HttpStatus.OK).bodyValue(inv.getArgument(2)));
 
@@ -259,7 +251,6 @@ class UserHandlerTest {
 
         @SuppressWarnings("unchecked")
         ConstraintViolation<UserDocumentDto> violation = mock(ConstraintViolation.class);
-        // El handler mapea violation.getMessage() -> UserErrorCode; no necesitamos exactitud, solo que haya error
         when(violation.getMessage()).thenReturn("USR_001");
         when(validator.<UserDocumentDto>validate(any(UserDocumentDto.class)))
                 .thenReturn(Collections.singleton(violation));

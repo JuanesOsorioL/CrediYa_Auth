@@ -12,14 +12,19 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import static org.springdoc.webflux.core.fn.SpringdocRouteBuilder.route;
 
 @Configuration
-public class UserRouterRest {
+public class RouterRest {
+
     @Bean
     public RouterFunction<ServerResponse> routerFunction(UserHandler handler, GlobalErrorHandler errorHandler, UserPath userPath) {
+
         return route()
                 .POST(userPath.getBase(), handler::createUser, UserOpenApi::createUser)
-                .GET(userPath.getBase(), handler::findAll, UserOpenApi::findAll)
+                .GET(userPath.getAllUsers(), handler::findAll, UserOpenApi::findAll)
                 .POST(userPath.getDocument(), handler::findByDocumentId, UserOpenApi::findByDocumentId)
+                .POST(userPath.getLogin(), handler::login, UserOpenApi::findByDocumentId)
+                .GET(userPath.getValidateToken(), handler::validateToken, UserOpenApi::findByDocumentId)
                 .build()
                 .filter(errorHandler.filter());
     }
+
 }
