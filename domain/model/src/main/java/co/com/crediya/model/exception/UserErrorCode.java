@@ -37,7 +37,6 @@ public enum UserErrorCode {
     private static final Map<String, UserErrorCode> CODE_MAP = Stream.of(values())
             .collect(Collectors.toMap(UserErrorCode::getCode, e -> e));
 
-
     public static UserErrorCode fromCode(String code) {
         return CODE_MAP.get(code);
     }
