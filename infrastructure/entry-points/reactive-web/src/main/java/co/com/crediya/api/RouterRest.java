@@ -19,6 +19,7 @@ public class RouterRest {
 
         return route()
                 .POST(userPath.getBase(), handler::createUser, UserOpenApi::createUser)
+                .POST(userPath.getSomeUsers(), handler::getUsersMapEmails, UserOpenApi::createUser)
                 .GET(userPath.getAllUsers(), handler::findAll, UserOpenApi::findAll)
                 .POST(userPath.getDocument(), handler::findByDocumentId, UserOpenApi::findByDocumentId)
                 .POST(userPath.getLogin(), handler::login, UserOpenApi::findByDocumentId)

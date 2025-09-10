@@ -48,6 +48,7 @@ routes:
     login: /api/v1/login
     validateToken: /api/v1/validateToken
     allUsers: /api/v1/usuarios/allUsers
+    someUsers: /api/v1/usuarios/mapEmails
 
 jwt:
   secret: "yW9kMHFmQmQzUGxwM0NnNGcyZ1kzZzdXwqGZz/GePgs="

@@ -12,9 +12,14 @@ import java.util.Collection;
 public interface UserReactiveRepository extends ReactiveCrudRepository<UserEntity, String>, ReactiveQueryByExampleExecutor<UserEntity> {
 
     Mono<Boolean> existsByEmail(String email);
+
     Mono<User> findByDocumentId(String documentId);
-    Flux<User> findByDocumentIdIn(Collection<String> documentIds);
+
+    Flux<User> findByEmailIn(Collection<String> emails);
+
     Mono<Boolean> existsByDocumentId(String documentId);
+
     Mono<User> findByEmailAndPassword(String email, String password);
+
 }
 

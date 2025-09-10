@@ -18,14 +18,18 @@ import co.com.crediya.usecase.user.gateways.UserService;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -35,10 +39,15 @@ public class UserHandler {
     private final UserService userService;
     private final RolService rolService;
     private final GenericDtoMapper genericDtoMapper;
-
     private final Validator validator;
     private final GlobalLogger logger;
     private final AuthenticationService authenticationService;
+
+
+    private static final ParameterizedTypeReference<Set<String>> LIST_STRING =
+            new ParameterizedTypeReference<>() {
+            };
+
 
     private UserErrorCode mapMessageToErrorCode(String code) {
         return UserErrorCode.fromCode(code);
@@ -183,5 +192,29 @@ public class UserHandler {
 
     }
 
+
+    public Mono<ServerResponse> getUsersMapEmails(ServerRequest req) {
+        logger.info("UsuarioBatchHandler -> getUsersMapEmails : inicia el flujo.");
+        return req.bodyToMono(LIST_STRING)
+                .defaultIfEmpty(Set.of())
+                .map(set -> set.stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(s -> !s.isBlank())
+                        .collect(Collectors.toCollection(LinkedHashSet::new))
+                )
+                .flatMap((Set<String> emails) -> {
+                    if (emails.isEmpty()) {
+                        return apiResponseBuilder.build(HttpStatus.BAD_REQUEST,
+                                "La lista de documentos no puede estar vacía", List.of());
+                    }
+                    logger.info("UsuarioBatchHandler -> getUsersMapEmails : {} documentos recibidos " + emails.size() + " ");
+
+                    return userService.getUsersByEmails(emails)
+                            .collectMap(User::getEmail, genericDtoMapper::toDto)
+                            .flatMap(map -> apiResponseBuilder.build(
+                                    HttpStatus.OK, "Usuarios recuperados correctamente", map));
+                });
+    }
 
 }

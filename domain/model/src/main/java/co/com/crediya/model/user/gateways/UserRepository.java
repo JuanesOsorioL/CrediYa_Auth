@@ -4,6 +4,8 @@ import co.com.crediya.model.user.User;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Set;
+
 public interface UserRepository {
     Mono<User> save(User user);
     Flux<User> findAll();
@@ -11,4 +13,5 @@ public interface UserRepository {
     Mono<User> findByDocumentId(String documentId);
     Mono<Boolean> existUserByDocumentId(String documentId);
     Mono<User> findIsExist(String email, String password);
+    Flux<User> getUsersByEmails(Set<String> emails);
 }

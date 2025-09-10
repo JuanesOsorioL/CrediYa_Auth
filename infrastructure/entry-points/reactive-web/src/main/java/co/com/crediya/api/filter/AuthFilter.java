@@ -33,6 +33,7 @@ public class AuthFilter implements WebFilter {
 
         if (path.startsWith("/api/v1/login")
                 || path.startsWith("/api/v1/validateToken")
+                || path.startsWith("/api/v1/usuarios/mapa")
                 || path.startsWith("/api/v1/usuarios/allUsers")
                 || path.startsWith("/api/v1/usuarios/document")
                 || path.startsWith("/v3/api-docs")

@@ -13,4 +13,5 @@ public class UserPath {
     private String login;
     private String validateToken;
     private String allUsers;
+    private String someUsers;
 }

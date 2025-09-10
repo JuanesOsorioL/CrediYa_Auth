@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -100,6 +101,8 @@ public class UserUseCase implements UserService {
         return userRepository.findIsExist(login.getEmail(), login.getPassword())
                 .doOnNext(u -> logger.info("prueba " + u.getEmail() + " "));
     }
-
-
+    @Override
+    public Flux<User> getUsersByEmails(Set<String> emails) {
+        return userRepository.getUsersByEmails(emails);
+    }
 }
