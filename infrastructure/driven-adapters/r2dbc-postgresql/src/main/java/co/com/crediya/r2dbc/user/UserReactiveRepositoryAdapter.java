@@ -24,29 +24,32 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<Boolean> existsByEmail(String email) {
-        return repository.existsByEmail(email);
-    }
-
-    @Override
-    public Mono<User> findByDocumentId(String documentId) {
-        return repository.findByDocumentId(documentId);
-    }
-
-    @Override
-    public Mono<Boolean> existUserByDocumentId(String documentId) {
-        return repository.existsByDocumentId(documentId);
-    }
-
-    @Override
+    //->Verifica si usuario existe enviando email y pass, retorna el usuario
     public Mono<User> findIsExist(String email, String password) {
         return repository.findByEmailAndPassword(email, password);
     }
 
     @Override
+    //->Verifica si usuario existe enviando documento, retorna el usuario
+    public Mono<Boolean> existUserByDocumentId(String documentId) {
+        return repository.existsByDocumentId(documentId);
+    }
+
+    @Override
+    //->Verifica si usuario existe enviando email, retorna boolean
+    public Mono<Boolean> existsByEmail(String email) {
+        return repository.existsByEmail(email);
+    }
+
+    @Override
+    //->se busca usuario por documento, retorna el usuario
+    public Mono<User> findByDocumentId(String documentId) {
+        return repository.findByDocumentId(documentId);
+    }
+
+    @Override
+    //-> consulta los usuarios, con una lista de correos, retorna un flux de ususarios
     public Flux<User> getUsersByEmails(Set<String> documents) {
         return repository.findByEmailIn(documents);
     }
-
-
 }

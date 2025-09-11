@@ -1,8 +1,8 @@
 package co.com.crediya.api.config;
 
 
-import co.com.crediya.api.filter.AuthFilter;
-import co.com.crediya.api.segurity.AuthenticationService;
+import co.com.crediya.api.segurity.filter.AuthFilter;
+import co.com.crediya.api.segurity.jwt.AuthenticationService;
 import co.com.crediya.usecase.logger.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +19,6 @@ public class WebConfig {
 
     @Bean
     public WebFilter authFilter(AuthenticationService authenticationService) {
-        return new AuthFilter(authenticationService,logger);
+        return new AuthFilter(authenticationService, logger);
     }
 }

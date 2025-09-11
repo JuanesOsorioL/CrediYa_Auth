@@ -9,13 +9,18 @@ import java.util.Set;
 
 public interface UserService {
 
-    Mono<User> createUser(User user);
-
-    Flux<User> getAllUsers();
-
-    Mono<User> findByDocumentId(String documentId);
-
+    //->Verifica si usuario existe enviando email y pass, retorna el usuario
     Mono<User> findIsExist(Login login);
 
+    //->se crea usuario, retorna el usuario
+    Mono<User> createUser(User user);
+
+    //->se busca usuario por documento, retorna el usuario
+    Mono<User> findByDocumentId(String documentId);
+
+    //-> No se pidio, se trtae todos los usuarios
+    Flux<User> getAllUsers();
+
+    //-> consulta los usuarios, con una lista de correos, retorna un flux de ususarios
     Flux<User> getUsersByEmails(Set<String> emails);
 }

@@ -1,7 +1,8 @@
-package co.com.crediya.api.segurity;
+package co.com.crediya.api.segurity.jwt;
 
 import co.com.crediya.api.dto.login.TokenClaimsDto;
 import co.com.crediya.api.dto.login.TokenDto;
+import co.com.crediya.api.logger.GlobalLogger;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -18,6 +19,12 @@ import java.util.Map;
 @Component
 public class AuthenticationService {
 
+    private final GlobalLogger logger;
+
+    public AuthenticationService(GlobalLogger logger) {
+        this.logger = logger;
+    }
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -29,8 +36,8 @@ public class AuthenticationService {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
-
     public TokenDto generateToken(TokenClaimsDto tokenClaimsDto) {
+        logger.info("AuthenticationService -> generateToken : se genera token");
         Map<String, Object> claims = Map.of(
                 "FistName", tokenClaimsDto.firstName(),
                 "LastName", tokenClaimsDto.lastName(),
@@ -49,6 +56,7 @@ public class AuthenticationService {
     }
 
     public Claims validateTokenAndGetClaims(TokenDto token) {
+        logger.info("AuthenticationService -> validateTokenAndGetClaims : se valida token");
         try {
             return Jwts.parser()
                     .verifyWith(getSingInKey())

@@ -5,7 +5,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface RolService {
-    Flux<Rol> findAll();
 
     Mono<Rol> findById(String rolId);
+
+
+    Flux<Rol> findAll();
 }

@@ -15,14 +15,17 @@ public class RolUseCase implements RolService {
     private final Logger logger;
 
     @Override
+    public Mono<Rol> findById(String rolId) {
+        return rolRepository.findByRolId(rolId)
+                .doOnNext(rol -> logger.info("RolUseCase -> findById : Se busca rol por medio del id"));
+    }
+
+
+    @Override
     public Flux<Rol> findAll() {
         return rolRepository.findAll()
                 .doOnNext(rol -> logger.info("Se buscan todos los roles"));
     }
 
-    @Override
-    public Mono<Rol> findById(String rolId) {
-        return rolRepository.findByRolId(rolId)
-                .doOnNext(rol -> logger.info("Se busca rol por medio del id"));
-    }
+
 }

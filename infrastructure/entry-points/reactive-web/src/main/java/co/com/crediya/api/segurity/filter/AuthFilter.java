@@ -1,9 +1,10 @@
-package co.com.crediya.api.filter;
+package co.com.crediya.api.segurity.filter;
 
 import co.com.crediya.api.dto.login.TokenDto;
-import co.com.crediya.api.segurity.AuthenticationService;
+import co.com.crediya.api.segurity.jwt.AuthenticationService;
 import co.com.crediya.model.exception.UserErrorCode;
-import co.com.crediya.usecase.exception.UserValidationException;
+import co.com.crediya.model.exception.specificExceptions.ForbiddenException;
+import co.com.crediya.model.exception.specificExceptions.UnauthorizedException;
 import co.com.crediya.usecase.logger.Logger;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -11,8 +12,6 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 public class AuthFilter implements WebFilter {
 
@@ -27,6 +26,7 @@ public class AuthFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        logger.info("AuthFilter -> filter : inicia el flujo de validaciones del token");
         var request = exchange.getRequest();
         var path = request.getURI().getPath();
         var method = request.getMethod();
@@ -45,35 +45,30 @@ public class AuthFilter implements WebFilter {
         }
 
         String header = request.getHeaders().getFirst("Authorization");
-        //logger.info("Token "+token+" ");
 
         if (header != null && header.startsWith("Bearer ")) {
             header = header.substring(7);
-            TokenDto token =new TokenDto(header);
+            TokenDto token = new TokenDto(header);
 
-            // logger.info("Token "+token+" ");
             Claims claims = authenticationService.validateTokenAndGetClaims(token);
 
             if (claims != null) {
                 String role = claims.get("Rol", String.class);
-                logger.info(role);
+                logger.info("AuthFilter -> filter : rol ingresado : " +role);
                 if (isValidRoleForEndpoint(role, request)) {
-                    logger.info("si cumple y puede ejecutar la solicitud");
+                    logger.info("AuthFilter -> filter : si cumple y puede ejecutar la solicitud");
                     return chain.filter(exchange);
                 } else {
-                    logger.info("No tienes permisos para acceder a este recurso");
-                    //  return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permisos para acceder a este recurso"));
-                    return Mono.error(new UserValidationException(List.of(UserErrorCode.YOU_DONT_HAVE_PERMISSION), List.of()));
+                    logger.info("AuthFilter -> filter : No tienes permisos para acceder a este recurso");
+                    return Mono.error(new ForbiddenException(UserErrorCode.YOU_DONT_HAVE_PERMISSION));
                 }
             } else {
-                logger.info("Token inválido, llega null");
-                // return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token inválido"));
-                return Mono.error(new UserValidationException(List.of(UserErrorCode.TOKEN_INVALID), List.of()));
+                logger.info("AuthFilter -> filter : Token inválido, llega null");
+                return Mono.error(new UnauthorizedException(UserErrorCode.TOKEN_INVALID));
             }
         } else {
-            logger.info("Token no proporcionado");
-            // return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token no proporcionado"));
-            return Mono.error(new UserValidationException(List.of(UserErrorCode.TOKEN_EMPTY), List.of()));
+            logger.info("AuthFilter -> filter : Token no proporcionado");
+            return Mono.error(new UnauthorizedException(UserErrorCode.TOKEN_EMPTY));
         }
     }
 
