@@ -175,23 +175,9 @@ public class UserHandler {
                                     HttpStatus.OK, "Usuarios recuperados correctamente", map));
                 });
 
-
-//
-//                .flatMap((Set<String> emails) -> {
-//                    if (emails.isEmpty()) {
-//                        return apiResponseBuilder.build(HttpStatus.BAD_REQUEST,
-//                                "La lista de documentos no puede estar vacía", List.of());
-//                    }
-//                    logger.info("UsuarioBatchHandler -> getUsersMapEmails : {} documentos recibidos " + emails.size() + " ");
-//
-//                    return userService.getUsersByEmails(emails)
-//                            .collectMap(User::getEmail, genericDtoMapper::toDto)
-//                            .flatMap(map -> apiResponseBuilder.build(
-//                                    HttpStatus.OK, "Usuarios recuperados correctamente", map));
-//                });
     }
 
-    //falta
+
     public Mono<ServerResponse> validateToken(ServerRequest serverRequest) {
         logger.info("UserHandler -> validateToken : inicia el flujo.");
 

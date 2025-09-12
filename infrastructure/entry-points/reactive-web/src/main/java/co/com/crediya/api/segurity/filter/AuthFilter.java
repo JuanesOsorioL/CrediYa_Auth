@@ -80,9 +80,10 @@ public class AuthFilter implements WebFilter {
             return role.equals("Admin") || role.equals("Adviser");
         }
 
-        if (path.startsWith("/api/v1/solicitud")) {
+        if (path.startsWith("/api/v1/solicitud")||(path.startsWith("/api/v1/validateToken"))) {
             return role.equals("Customer");
         }
+
         return false;
     }
 }
