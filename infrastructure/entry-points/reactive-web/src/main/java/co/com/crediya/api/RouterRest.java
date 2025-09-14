@@ -18,11 +18,11 @@ public class RouterRest {
 
         return route()
                 .POST(userPath.getBase(), handler::createUser, UserOpenApi::createUser)
-                .POST(userPath.getSomeUsers(), handler::getUsersMapEmails, UserOpenApi::createUser)
+                .POST(userPath.getSomeUsers(), handler::getUsersMapEmails, UserOpenApi::someUsers)
                 .GET(userPath.getAllUsers(), handler::findAll, UserOpenApi::findAll)
                 .POST(userPath.getDocument(), handler::findByDocumentId, UserOpenApi::findByDocumentId)
-                .POST(userPath.getLogin(), handler::login, UserOpenApi::findByDocumentId)
-                .GET(userPath.getValidateToken(), handler::validateToken, UserOpenApi::findByDocumentId)
+                .POST(userPath.getLogin(), handler::login, UserOpenApi::login)
+                .GET(userPath.getValidateToken(), handler::validateToken, UserOpenApi::validateToken)
                 .build();
     }
 

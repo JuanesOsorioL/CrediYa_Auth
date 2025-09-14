@@ -4,11 +4,13 @@ package co.com.crediya.api;
 import co.com.crediya.api.dto.login.LoginDto;
 import co.com.crediya.api.dto.login.TokenClaimsDto;
 import co.com.crediya.api.dto.login.TokenDto;
+import co.com.crediya.api.dto.user.EmailsRequestDto;
 import co.com.crediya.api.dto.user.UserDocumentDto;
 import co.com.crediya.api.dto.user.UserDto;
 import co.com.crediya.api.logger.GlobalLogger;
 import co.com.crediya.api.mapper.GenericDtoMapper;
 import co.com.crediya.api.response.ApiResponseBuilder;
+import co.com.crediya.api.response.UsersByEmailResponse;
 import co.com.crediya.api.segurity.jwt.AuthenticationService;
 import co.com.crediya.model.exception.UserErrorCode;
 import co.com.crediya.model.exception.specificExceptions.BadRequestException;
@@ -157,24 +159,29 @@ public class UserHandler {
 
     public Mono<ServerResponse> getUsersMapEmails(ServerRequest serverRequest) {
         logger.info("UserHandler -> getUsersMapEmails : inicia el flujo.");
-        return serverRequest.bodyToMono(LIST_STRING)
-                .defaultIfEmpty(Set.of())
-                .map(set -> set.stream()
-                        .filter(Objects::nonNull)
+
+        return serverRequest.bodyToMono(EmailsRequestDto.class)
+                .map(req -> req.emails() == null ? List.<String>of() : req.emails())
+                .map(list -> list.stream()
                         .map(String::trim)
                         .filter(s -> !s.isBlank())
                         .collect(Collectors.toCollection(LinkedHashSet::new)))
                 .filter(emails -> !emails.isEmpty())
                 .switchIfEmpty(Mono.error(new BadRequestException(UserErrorCode.EMAIL_EMPTY)))
                 .flatMap(emails -> {
-                    logger.info("UserHandler -> getUsersMapEmails : {} emails recibidos " + emails.size() + " ");
+                    logger.info("UserHandler -> getUsersMapEmails : "+emails.size()+" emails recibidos");
 
                     return userService.getUsersByEmails(emails)
                             .collectMap(User::getEmail, genericDtoMapper::toDto)
-                            .flatMap(map -> apiResponseBuilder.build(
-                                    HttpStatus.OK, "Usuarios recuperados correctamente", map));
+                            .flatMap(map -> {
+                                UsersByEmailResponse resp = new UsersByEmailResponse(map);
+                                return apiResponseBuilder.build(
+                                        HttpStatus.OK,
+                                        "Usuarios recuperados correctamente",
+                                        resp
+                                );
+                            });
                 });
-
     }
 
 
