@@ -1,8 +1,8 @@
 package co.com.crediya.usecase.rol;
 
+import co.com.crediya.model.logger.Logger;
 import co.com.crediya.model.rol.Rol;
 import co.com.crediya.model.rol.gateways.RolRepository;
-import co.com.crediya.usecase.logger.Logger;
 import co.com.crediya.usecase.rol.gateways.RolService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;

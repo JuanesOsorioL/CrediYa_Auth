@@ -2,11 +2,11 @@ package co.com.crediya.api.openapi;
 
 
 import co.com.crediya.api.dto.login.LoginDto;
+import co.com.crediya.api.dto.segurity.ClaismoDto;
 import co.com.crediya.api.dto.user.EmailsRequestDto;
 import co.com.crediya.api.dto.user.UserDocumentDto;
 import co.com.crediya.api.dto.user.UserDto;
 import co.com.crediya.api.response.UsersByEmailResponse;
-import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.experimental.UtilityClass;
 import org.springdoc.core.fn.builders.operation.Builder;
@@ -158,7 +158,7 @@ public class UserOpenApi {
                         .responseCode(String.valueOf(HttpStatus.OK.value()))
                         .description("Token válido. Se envían claims")
                         .content(contentBuilder().mediaType(MediaType.APPLICATION_JSON_VALUE)
-                                .schema(schemaBuilder().implementation(Claims.class))))
+                                .schema(schemaBuilder().implementation(ClaismoDto.class))))
                 .response(responseBuilder()
                         .responseCode(String.valueOf(HttpStatus.UNAUTHORIZED.value()))
                         .description("Token no proporcionado o inválido")

@@ -2,25 +2,25 @@ package co.com.crediya.api;
 
 
 import co.com.crediya.api.dto.login.LoginDto;
-import co.com.crediya.api.dto.login.TokenClaimsDto;
-import co.com.crediya.api.dto.login.TokenDto;
+import co.com.crediya.api.dto.segurity.ClaismoDto;
+import co.com.crediya.api.dto.segurity.TokenClaimsDto;
+import co.com.crediya.api.dto.segurity.TokenDto;
 import co.com.crediya.api.dto.user.EmailsRequestDto;
 import co.com.crediya.api.dto.user.UserDocumentDto;
 import co.com.crediya.api.dto.user.UserDto;
-import co.com.crediya.api.logger.GlobalLogger;
 import co.com.crediya.api.mapper.GenericDtoMapper;
 import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.api.response.UsersByEmailResponse;
-import co.com.crediya.api.segurity.jwt.AuthenticationService;
 import co.com.crediya.model.exception.UserErrorCode;
 import co.com.crediya.model.exception.specific_exceptions.BadRequestException;
 import co.com.crediya.model.exception.specific_exceptions.NotFoundException;
 import co.com.crediya.model.exception.specific_exceptions.UnauthorizedException;
+import co.com.crediya.model.logger.Logger;
+import co.com.crediya.model.segurity.SegurityGateway;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.exception.UserValidationException;
 import co.com.crediya.usecase.rol.gateways.RolService;
 import co.com.crediya.usecase.user.gateways.UserService;
-import io.jsonwebtoken.Claims;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,10 +29,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -43,14 +41,13 @@ public class UserHandler {
     private final RolService rolService;
     private final GenericDtoMapper genericDtoMapper;
     private final Validator validator;
-    private final GlobalLogger logger;
-    private final AuthenticationService authenticationService;
+    private final Logger logger;
+    private final SegurityGateway segurityGateway;
 
 
     private UserErrorCode mapMessageToErrorCode(String code) {
         return UserErrorCode.fromCode(code);
     }
-
 
     //primero
     public Mono<ServerResponse> login(ServerRequest serverRequest) {
@@ -82,11 +79,12 @@ public class UserHandler {
                                 role.getName()
                         )))
                 .flatMap(tokenClaimsDto -> {
-                    TokenDto token = authenticationService.generateToken(tokenClaimsDto); //se retorna el token
+                    TokenDto token = genericDtoMapper.toTokenDto(segurityGateway.generateToken(genericDtoMapper.toTokenClaims(tokenClaimsDto))); //se retorna el token
                     return apiResponseBuilder.build(HttpStatus.OK, "Usuario logueado exitosamente", token.token());
                 })
                 .doOnSuccess(l -> logger.info("UserHandler -> login : Usuario autenticado exitosamente"));
     }
+
     // segundo AuthFilter
     public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
         logger.info("UserHandler -> createUser : inicia el flujo.");
@@ -153,32 +151,33 @@ public class UserHandler {
                 .doOnSuccess(resp -> logger.info("UserHandler -> findAll : Todos los usuarios fueron recuperados y enviados correctamente"));
     }
 
-
-
     //historia de solicitud
     public Mono<ServerResponse> getUsersMapEmails(ServerRequest serverRequest) {
         logger.info("UserHandler -> getUsersMapEmails : inicia el flujo.");
 
         return serverRequest.bodyToMono(EmailsRequestDto.class)
-                .map(EmailsRequestDto::emails)
+                // si viene null, usar lista vacía
+                .map(dto -> java.util.Optional.ofNullable(dto.emails())
+                        .orElse(java.util.Collections.emptyList()))
+                // trim, quitar nulos y vacíos, y deduplicar preservando orden
                 .map(list -> list.stream()
+                        .filter(java.util.Objects::nonNull)
                         .map(String::trim)
-                        .collect(Collectors.toCollection(LinkedHashSet::new)))
+                        .filter(s -> !s.isBlank())
+                        .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new)))
+                // si quedó vacío => 400
                 .filter(emails -> !emails.isEmpty())
                 .switchIfEmpty(Mono.error(new BadRequestException(UserErrorCode.EMAIL_EMPTY)))
+                // buscar y responder
                 .flatMap(emails -> {
                     logger.info("UserHandler -> getUsersMapEmails : " + emails.size() + " emails recibidos");
-
                     return userService.getUsersByEmails(emails)
                             .collectMap(User::getEmail, genericDtoMapper::toDto)
-                            .flatMap(map -> {
-                                UsersByEmailResponse resp = new UsersByEmailResponse(map);
-                                return apiResponseBuilder.build(
-                                        HttpStatus.OK,
-                                        "Usuarios recuperados correctamente",
-                                        resp
-                                );
-                            });
+                            .flatMap(map -> apiResponseBuilder.build(
+                                    HttpStatus.OK,
+                                    "Usuarios recuperados correctamente",
+                                    new UsersByEmailResponse(map)
+                            ));
                 });
     }
 
@@ -203,7 +202,7 @@ public class UserHandler {
         return Mono.just(tokenDto)
                 .doOnNext(token -> logger.info("UserHandler -> validateToken : Iniciando validación del token"))
                 .flatMap(tokenDton -> {
-                    Claims claims = authenticationService.validateTokenAndGetClaims(tokenDton);
+                    ClaismoDto claims = genericDtoMapper.toClaismoDto(segurityGateway.validateTokenClaims(genericDtoMapper.toToken(tokenDton)));
                     if (claims == null) {
 
                         logger.info("UserHandler -> validateToken : Token inválido");
@@ -214,6 +213,5 @@ public class UserHandler {
                 });
 
     }
-
 
 }

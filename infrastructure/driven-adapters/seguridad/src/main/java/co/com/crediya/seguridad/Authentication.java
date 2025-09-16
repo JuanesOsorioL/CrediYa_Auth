@@ -1,13 +1,18 @@
-package co.com.crediya.api.segurity.jwt;
+package co.com.crediya.seguridad;
 
-import co.com.crediya.api.dto.login.TokenClaimsDto;
-import co.com.crediya.api.dto.login.TokenDto;
-import co.com.crediya.api.logger.GlobalLogger;
+
+import co.com.crediya.model.logger.Logger;
+import co.com.crediya.model.segurity.SegurityGateway;
+import co.com.crediya.model.segurity.dto.Claismo;
+import co.com.crediya.model.segurity.dto.Token;
+import co.com.crediya.model.segurity.dto.TokenClaims;
+import co.com.crediya.seguridad.mapper.AuthenticationMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,13 +22,11 @@ import java.util.Map;
 
 
 @Component
-public class AuthenticationService {
+@RequiredArgsConstructor
+public class Authentication implements SegurityGateway {
 
-    private final GlobalLogger logger;
-
-    public AuthenticationService(GlobalLogger logger) {
-        this.logger = logger;
-    }
+    private final Logger logger;
+    private final AuthenticationMapper authenticationMapper;
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -36,18 +39,18 @@ public class AuthenticationService {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
-    public TokenDto generateToken(TokenClaimsDto tokenClaimsDto) {
+    public Token generateToken(TokenClaims tokenClaims) {
         logger.info("AuthenticationService -> generateToken : se genera token");
         Map<String, Object> claims = Map.of(
-                "FistName", tokenClaimsDto.firstName(),
-                "LastName", tokenClaimsDto.lastName(),
-                "Document", tokenClaimsDto.documentId(),
-                "Rol", tokenClaimsDto.rolName()
+                "FistName", tokenClaims.firstName(),
+                "LastName", tokenClaims.lastName(),
+                "Document", tokenClaims.documentId(),
+                "Rol", tokenClaims.rolName()
         );
-        return new TokenDto(Jwts.builder()
-                .id(tokenClaimsDto.userId())
+        return new Token(Jwts.builder()
+                .id(tokenClaims.userId())
                 .claims(claims)
-                .subject(tokenClaimsDto.email())
+                .subject(tokenClaims.email())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSingInKey())
@@ -55,14 +58,16 @@ public class AuthenticationService {
 
     }
 
-    public Claims validateTokenAndGetClaims(TokenDto token) {
+    public Claismo validateTokenClaims(Token token) {
         logger.info("AuthenticationService -> validateTokenAndGetClaims : se valida token");
         try {
-            return Jwts.parser()
+            Claims claims = Jwts.parser()
                     .verifyWith(getSingInKey())
                     .build()
                     .parseSignedClaims(token.token())
                     .getPayload();
+            logger.info("mirar1111 : " + claims.toString());
+            return authenticationMapper.toClaismo(claims);
         } catch (JwtException e) {
             return null;
         }

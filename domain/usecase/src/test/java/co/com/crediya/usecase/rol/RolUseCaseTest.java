@@ -1,8 +1,9 @@
 package co.com.crediya.usecase.rol;
 
+import co.com.crediya.model.logger.Logger;
 import co.com.crediya.model.rol.Rol;
 import co.com.crediya.model.rol.gateways.RolRepository;
-import co.com.crediya.usecase.logger.Logger;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

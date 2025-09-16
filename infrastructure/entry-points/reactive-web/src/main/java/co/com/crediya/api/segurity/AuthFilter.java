@@ -1,28 +1,32 @@
-package co.com.crediya.api.segurity.filter;
+package co.com.crediya.api.segurity;
 
-import co.com.crediya.api.dto.login.TokenDto;
-import co.com.crediya.api.segurity.jwt.AuthenticationService;
+import co.com.crediya.api.dto.segurity.TokenDto;
+import co.com.crediya.api.mapper.GenericDtoMapper;
 import co.com.crediya.model.exception.UserErrorCode;
 import co.com.crediya.model.exception.specific_exceptions.ForbiddenException;
 import co.com.crediya.model.exception.specific_exceptions.UnauthorizedException;
-import co.com.crediya.usecase.logger.Logger;
-import io.jsonwebtoken.Claims;
+import co.com.crediya.model.logger.Logger;
+import co.com.crediya.model.segurity.SegurityGateway;
+import co.com.crediya.model.segurity.dto.Claismo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+@RequiredArgsConstructor
 public class AuthFilter implements WebFilter {
 
-    private final AuthenticationService authenticationService;
+    private final SegurityGateway segurityGateway;
+    private final GenericDtoMapper genericDtoMapper;
     private final Logger logger;
 
-    public AuthFilter(AuthenticationService authenticationService, Logger logger) {
-        this.authenticationService = authenticationService;
-        this.logger = logger;
+    public AuthFilter(SegurityGateway segurityGateway, GenericDtoMapper genericDtoMapper, Logger logger, SegurityGateway segurityGateway1, GenericDtoMapper genericDtoMapper1, Logger logger1) {
+        this.segurityGateway = segurityGateway1;
+        this.genericDtoMapper = genericDtoMapper1;
+        this.logger = logger1;
     }
-
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -50,11 +54,11 @@ public class AuthFilter implements WebFilter {
             header = header.substring(7);
             TokenDto token = new TokenDto(header);
 
-            Claims claims = authenticationService.validateTokenAndGetClaims(token);
+            Claismo claims = segurityGateway.validateTokenClaims(genericDtoMapper.toToken(token));
 
             if (claims != null) {
-                String role = claims.get("Rol", String.class);
-                logger.info("AuthFilter -> filter : rol ingresado : " +role);
+                String role = claims.Rol();
+                logger.info("AuthFilter -> filter : rol ingresado : " + role);
                 if (isValidRoleForEndpoint(role, request)) {
                     logger.info("AuthFilter -> filter : si cumple y puede ejecutar la solicitud");
                     return chain.filter(exchange);
@@ -80,7 +84,7 @@ public class AuthFilter implements WebFilter {
             return role.equals("Admin") || role.equals("Adviser");
         }
 
-        if (path.startsWith("/api/v1/solicitud")||(path.startsWith("/api/v1/validateToken"))) {
+        if (path.startsWith("/api/v1/solicitud") || (path.startsWith("/api/v1/validateToken"))) {
             return role.equals("Customer");
         }
 

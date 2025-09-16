@@ -1,9 +1,10 @@
 package co.com.crediya.api.exception;
 
-import co.com.crediya.api.logger.GlobalLogger;
 import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.model.exception.DomainException;
 import co.com.crediya.model.exception.UserErrorCode;
+import co.com.crediya.model.logger.Logger;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.HttpMessageWriter;
@@ -18,19 +19,13 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 @Order(-2)
 public class GlobalWebExceptionHandler implements WebExceptionHandler {
 
     private final ApiResponseBuilder apiResponseBuilder;
     private final DomainHttpStatusMapper statusMapper;
-    private final GlobalLogger logger;
-
-    public GlobalWebExceptionHandler(ApiResponseBuilder builder, DomainHttpStatusMapper statusMapper, GlobalLogger logger) {
-        this.apiResponseBuilder = builder;
-        this.statusMapper = statusMapper;
-        this.logger = logger;
-    }
-
+    private final Logger logger;
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
@@ -48,7 +43,7 @@ public class GlobalWebExceptionHandler implements WebExceptionHandler {
                     ? List.of(de.getMessage())
                     : de.errors().stream().map(UserErrorCode::getMessage).distinct().toList();
 
-            logger.warn("GlobalWebExceptionHandler -> handle : DomainException capturada. kind = "+de.kind()+", code = "+code+", status = "+status+" ");
+            logger.warn("GlobalWebExceptionHandler -> handle : DomainException capturada. kind = " + de.kind() + ", code = " + code + ", status = " + status + " ");
 
             return apiResponseBuilder.buildError(status, code, de.getMessage(), details)
                     .flatMap(resp -> resp.writeTo(exchange, new ResponseContext()));
@@ -65,10 +60,14 @@ public class GlobalWebExceptionHandler implements WebExceptionHandler {
 
     static final class ResponseContext implements ServerResponse.Context {
         private final HandlerStrategies strategies = HandlerStrategies.withDefaults();
-        @Override public List<HttpMessageWriter<?>> messageWriters() {
+
+        @Override
+        public List<HttpMessageWriter<?>> messageWriters() {
             return strategies.messageWriters();
         }
-        @Override public List<org.springframework.web.reactive.result.view.ViewResolver> viewResolvers() {
+
+        @Override
+        public List<org.springframework.web.reactive.result.view.ViewResolver> viewResolvers() {
             return strategies.viewResolvers();
         }
     }

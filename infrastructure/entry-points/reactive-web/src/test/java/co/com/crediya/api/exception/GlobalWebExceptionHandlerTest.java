@@ -3,8 +3,9 @@ package co.com.crediya.api.exception;
 
 import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.model.exception.UserErrorCode;
+import co.com.crediya.model.logger.Logger;
 import co.com.crediya.usecase.exception.UserValidationException;
-import co.com.crediya.api.logger.GlobalLogger;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -26,14 +27,14 @@ class GlobalWebExceptionHandlerTest {
 
     private ApiResponseBuilder apiResponseBuilder;
     private DomainHttpStatusMapper statusMapper;
-    private GlobalLogger logger;
+    private Logger logger;
     private GlobalWebExceptionHandler handler;
 
     @BeforeEach
     void setUp() {
         apiResponseBuilder = mock(ApiResponseBuilder.class);
         statusMapper = mock(DomainHttpStatusMapper.class);
-        logger = mock(GlobalLogger.class);
+        logger = mock(Logger.class);
 
         handler = new GlobalWebExceptionHandler(apiResponseBuilder, statusMapper, logger);
     }

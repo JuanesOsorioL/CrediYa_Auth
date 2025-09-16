@@ -1,7 +1,7 @@
-package co.com.crediya.api.logger;
+package co.com.crediya.logger.logger;
 
 
-import co.com.crediya.usecase.logger.Logger;
+import co.com.crediya.model.logger.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +21,18 @@ public class GlobalLogger implements Logger {
     }
 
     @Override
+    public void warnTwo(String message, String body) {
+        logger.warn(message, body);
+    }
+
+    @Override
     public void error(String message, Throwable exception) {
         logger.error(message, exception);
+    }
+
+    @Override
+    public void error(String message) {
+        logger.error(message);
     }
 }
 

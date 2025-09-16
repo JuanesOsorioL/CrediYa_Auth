@@ -40,7 +40,8 @@ springdoc:
 logging:
   level:
     root: WARN
-    co.com.crediya.api.logger.GlobalLogger: INFO
+    co.com.crediya.logger.logger.GlobalLogger: INFO
+
 routes:
   user:
     base: /api/v1/usuarios

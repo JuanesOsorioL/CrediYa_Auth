@@ -1,6 +1,6 @@
-package co.com.crediya.api.dto.login;
+package co.com.crediya.model.segurity.dto;
 
-public record TokenClaimsDto(
+public record TokenClaims(
         String userId,
         String firstName,
         String lastName,

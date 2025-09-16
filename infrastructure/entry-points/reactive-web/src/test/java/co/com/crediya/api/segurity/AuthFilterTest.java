@@ -1,11 +1,14 @@
-package co.com.crediya.api.segurity.filter;
+package co.com.crediya.api.segurity;
 
-import co.com.crediya.api.dto.login.TokenDto;
-import co.com.crediya.api.segurity.jwt.AuthenticationService;
+
+import co.com.crediya.api.dto.segurity.TokenDto;
+import co.com.crediya.api.mapper.GenericDtoMapper;
 import co.com.crediya.model.exception.specific_exceptions.ForbiddenException;
 import co.com.crediya.model.exception.specific_exceptions.UnauthorizedException;
-import co.com.crediya.usecase.logger.Logger;
-import io.jsonwebtoken.Claims;
+import co.com.crediya.model.logger.Logger;
+import co.com.crediya.model.segurity.SegurityGateway;
+import co.com.crediya.model.segurity.dto.Claismo;
+import co.com.crediya.model.segurity.dto.Token;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -18,14 +21,15 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class AuthFilterTest {
 
     @Mock
-    private AuthenticationService authenticationService;
+    private SegurityGateway segurityGateway;
+    @Mock
+    private GenericDtoMapper genericDtoMapper;
     @Mock
     private Logger logger;
     @Mock
@@ -36,7 +40,7 @@ class AuthFilterTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        filter = new AuthFilter(authenticationService, logger);
+        filter = new AuthFilter(segurityGateway, genericDtoMapper, logger);
         when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
     }
 
@@ -45,11 +49,10 @@ class AuthFilterTest {
         var req = MockServerHttpRequest.get("/api/v1/login").build();
         var exchange = MockServerWebExchange.from(req);
 
-        StepVerifier.create(filter.filter(exchange, chain))
-                .verifyComplete();
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
-        verify(chain, times(1)).filter(any(ServerWebExchange.class));
-        verifyNoInteractions(authenticationService);
+        verify(chain).filter(any(ServerWebExchange.class));
+        verifyNoInteractions(segurityGateway, genericDtoMapper);
     }
 
     @Test
@@ -57,11 +60,10 @@ class AuthFilterTest {
         var req = MockServerHttpRequest.get("/api/v1/validateToken").build();
         var exchange = MockServerWebExchange.from(req);
 
-        StepVerifier.create(filter.filter(exchange, chain))
-                .verifyComplete();
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
-        verify(chain, times(1)).filter(any(ServerWebExchange.class));
-        verifyNoInteractions(authenticationService);
+        verify(chain).filter(any(ServerWebExchange.class));
+        verifyNoInteractions(segurityGateway, genericDtoMapper);
     }
 
     @Test
@@ -69,11 +71,10 @@ class AuthFilterTest {
         var req = MockServerHttpRequest.options("/api/v1/usuarios/anything").build();
         var exchange = MockServerWebExchange.from(req);
 
-        StepVerifier.create(filter.filter(exchange, chain))
-                .verifyComplete();
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
-        verify(chain, times(1)).filter(any(ServerWebExchange.class));
-        verifyNoInteractions(authenticationService);
+        verify(chain).filter(any(ServerWebExchange.class));
+        verifyNoInteractions(segurityGateway, genericDtoMapper);
     }
 
     @Test
@@ -86,6 +87,7 @@ class AuthFilterTest {
                 .verify();
 
         verify(chain, never()).filter(any());
+        verifyNoInteractions(segurityGateway, genericDtoMapper);
     }
 
     @Test
@@ -99,7 +101,7 @@ class AuthFilterTest {
                 .expectError(UnauthorizedException.class)
                 .verify();
 
-        verifyNoInteractions(authenticationService);
+        verifyNoInteractions(segurityGateway, genericDtoMapper);
         verify(chain, never()).filter(any());
     }
 
@@ -110,7 +112,8 @@ class AuthFilterTest {
                 .build();
         var exchange = MockServerWebExchange.from(req);
 
-        when(authenticationService.validateTokenAndGetClaims(any(TokenDto.class))).thenReturn(null);
+        when(genericDtoMapper.toToken(any(TokenDto.class))).thenReturn(new Token("badtoken"));
+        when(segurityGateway.validateTokenClaims(any(Token.class))).thenReturn(null);
 
         StepVerifier.create(filter.filter(exchange, chain))
                 .expectError(UnauthorizedException.class)
@@ -127,14 +130,14 @@ class AuthFilterTest {
                 .build();
         var exchange = MockServerWebExchange.from(req);
 
-        Claims claims = mock(Claims.class);
-        when(claims.get(eq("Rol"), eq(String.class))).thenReturn("Admin");
-        when(authenticationService.validateTokenAndGetClaims(any(TokenDto.class))).thenReturn(claims);
+        when(genericDtoMapper.toToken(any(TokenDto.class))).thenReturn(new Token("goodtoken"));
+        var claims = new Claismo("Ana", "ana@ex.com", "Admin", "1700000000",
+                "Gómez", "123", "1690000000", "user-1");
+        when(segurityGateway.validateTokenClaims(any(Token.class))).thenReturn(claims);
 
-        StepVerifier.create(filter.filter(exchange, chain))
-                .verifyComplete();
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
-        verify(chain, times(1)).filter(any());
+        verify(chain).filter(any());
     }
 
     @Test
@@ -145,14 +148,14 @@ class AuthFilterTest {
                 .build();
         var exchange = MockServerWebExchange.from(req);
 
-        Claims claims = mock(Claims.class);
-        when(claims.get(eq("Rol"), eq(String.class))).thenReturn("Adviser");
-        when(authenticationService.validateTokenAndGetClaims(any(TokenDto.class))).thenReturn(claims);
+        when(genericDtoMapper.toToken(any(TokenDto.class))).thenReturn(new Token("goodtoken"));
+        var claims = new Claismo("Ana", "ana@ex.com", "Adviser", "1700000000",
+                "Gómez", "123", "1690000000", "user-1");
+        when(segurityGateway.validateTokenClaims(any(Token.class))).thenReturn(claims);
 
-        StepVerifier.create(filter.filter(exchange, chain))
-                .verifyComplete();
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
-        verify(chain, times(1)).filter(any());
+        verify(chain).filter(any());
     }
 
     @Test
@@ -163,15 +166,14 @@ class AuthFilterTest {
                 .build();
         var exchange = MockServerWebExchange.from(req);
 
+        when(genericDtoMapper.toToken(any(TokenDto.class))).thenReturn(new Token("goodtoken"));
+        var claims = new Claismo("Ana", "ana@ex.com", "Customer", "1700000000",
+                "Gómez", "123", "1690000000", "user-1");
+        when(segurityGateway.validateTokenClaims(any(Token.class))).thenReturn(claims);
 
-        Claims claims = mock(Claims.class);
-        when(claims.get(eq("Rol"), eq(String.class))).thenReturn("Customer");
-        when(authenticationService.validateTokenAndGetClaims(any(TokenDto.class))).thenReturn(claims);
+        StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
-        StepVerifier.create(filter.filter(exchange, chain))
-                .verifyComplete();
-
-        verify(chain, times(1)).filter(any());
+        verify(chain).filter(any());
     }
 
     @Test
@@ -182,9 +184,10 @@ class AuthFilterTest {
                 .build();
         var exchange = MockServerWebExchange.from(req);
 
-        Claims claims = mock(Claims.class);
-        when(claims.get(eq("Rol"), eq(String.class))).thenReturn("Customer");
-        when(authenticationService.validateTokenAndGetClaims(any(TokenDto.class))).thenReturn(claims);
+        when(genericDtoMapper.toToken(any(TokenDto.class))).thenReturn(new Token("goodtoken"));
+        var claims = new Claismo("Ana", "ana@ex.com", "Customer", "1700000000",
+                "Gómez", "123", "1690000000", "user-1");
+        when(segurityGateway.validateTokenClaims(any(Token.class))).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain))
                 .expectError(ForbiddenException.class)
@@ -195,12 +198,16 @@ class AuthFilterTest {
 
     @Test
     void customerRole_cannotAccessUnknownEndpoints_forbidden() {
-        var req = MockServerHttpRequest.get("/api/v1/otro/recurso").header("Authorization", "Bearer tkn").build();
+        var req = MockServerHttpRequest
+                .get("/api/v1/otro/recurso")
+                .header("Authorization", "Bearer tkn")
+                .build();
         var exchange = MockServerWebExchange.from(req);
 
-        Claims claims = mock(Claims.class);
-        when(claims.get(eq("Rol"), eq(String.class))).thenReturn("Customer");
-        when(authenticationService.validateTokenAndGetClaims(any(TokenDto.class))).thenReturn(claims);
+        when(genericDtoMapper.toToken(any(TokenDto.class))).thenReturn(new Token("tkn"));
+        var claims = new Claismo("Ana", "ana@ex.com", "Customer", "1700000000",
+                "Gómez", "123", "1690000000", "user-1");
+        when(segurityGateway.validateTokenClaims(any(Token.class))).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain))
                 .expectError(ForbiddenException.class)

@@ -1,8 +1,8 @@
 package co.com.crediya.config;
 
+import co.com.crediya.model.logger.Logger;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.usecase.user.UserUseCase;
-import co.com.crediya.usecase.logger.Logger;
 import org.springframework.context.annotation.*;
 
 @Configuration
@@ -13,9 +13,14 @@ import org.springframework.context.annotation.*;
         useDefaultFilters = false)
 
 public class UseCasesConfig {
-        @Bean
-        @Primary
-        public UserUseCase userUseCase(UserRepository userRepository,Logger logger) {
-                return new UserUseCase(userRepository, logger);
-        }
+    @Bean
+    @Primary
+    public UserUseCase userUseCase(UserRepository userRepository, Logger logger) {
+        return new UserUseCase(userRepository, logger);
+    }
+
+//    @Bean
+//    RolService rolService(RolRepository rolRepository, Logger logger) {
+//        return new RolUseCase(rolRepository, logger);
+//    }
 }

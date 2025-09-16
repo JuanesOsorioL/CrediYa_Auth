@@ -1,4 +1,4 @@
-package co.com.crediya.api.dto.login;
+package co.com.crediya.api.dto.segurity;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -1,9 +1,12 @@
 package co.com.crediya.api.config;
 
 
-import co.com.crediya.api.segurity.filter.AuthFilter;
-import co.com.crediya.api.segurity.jwt.AuthenticationService;
-import co.com.crediya.usecase.logger.Logger;
+import co.com.crediya.api.mapper.GenericDtoMapper;
+import co.com.crediya.api.segurity.AuthFilter;
+
+
+import co.com.crediya.model.logger.Logger;
+import co.com.crediya.model.segurity.SegurityGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -22,10 +25,11 @@ class WebConfigTest {
     @Test
     void authFilterBean_isCreated_andPassesWhitelistedPath() {
         Logger logger = mock(Logger.class);
-        AuthenticationService authenticationService = mock(AuthenticationService.class);
+        SegurityGateway segurityGateway = mock(SegurityGateway.class);
+        GenericDtoMapper genericDtoMapper = mock(GenericDtoMapper.class);
 
         WebConfig config = new WebConfig(logger);
-        WebFilter filter = config.authFilter(authenticationService);
+        WebFilter filter = config.authFilter(segurityGateway, genericDtoMapper);
 
         assertThat(filter).isInstanceOf(AuthFilter.class);
 
@@ -36,6 +40,6 @@ class WebConfigTest {
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
         verify(chain, times(1)).filter(any());
-        verifyNoInteractions(authenticationService);
+        verifyNoInteractions(segurityGateway, genericDtoMapper);
     }
 }
