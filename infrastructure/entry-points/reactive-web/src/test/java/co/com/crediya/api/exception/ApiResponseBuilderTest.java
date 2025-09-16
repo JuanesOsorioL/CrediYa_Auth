@@ -22,9 +22,24 @@ public class ApiResponseBuilderTest {
         ApiResponseBuilder builder = new ApiResponseBuilder();
 
         RouterFunction<ServerResponse> router = route(GET("/test"), request ->
-                builder.build(HttpStatus.OK, "Test exitoso", "Cuerpo de prueba"));
+                builder.build(HttpStatus.OK, "Test exitoso", "Cuerpo de prueba"))
+                .andRoute(GET("/error"), request ->
+                        builder.buildError(HttpStatus.BAD_REQUEST, "ERR_123", "Algo salió mal", "Detalle de error"));
 
         webTestClient = WebTestClient.bindToRouterFunction(router).build();
+    }
+    @Test
+    void testApiResponseBuilder_buildError() {
+        webTestClient.get()
+                .uri("/error")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectHeader().contentType("application/json; charset=UTF-8")
+                .expectBody()
+                .jsonPath("$.status").isEqualTo(400)
+                .jsonPath("$.code").isEqualTo("ERR_123")
+                .jsonPath("$.message").isEqualTo("Algo salió mal")
+                .jsonPath("$.body").isEqualTo("Detalle de error");
     }
 
     @Test

@@ -99,7 +99,7 @@ class ReactiveAdapterOperationsTest {
                 .verifyComplete();
     }
 
-    @Test//se implemento
+    @Test
     void testToDataAndToEntity() {
         DummyEntity entity = new DummyEntity("1", "test");
         DummyData data = new DummyData("1", "test");

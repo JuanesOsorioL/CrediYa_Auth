@@ -1,4 +1,4 @@
-package co.com.crediya.model.exception.specificExceptions;
+package co.com.crediya.model.exception.specific_exceptions;
 
 import co.com.crediya.model.exception.DomainException;
 import co.com.crediya.model.exception.ErrorKind;

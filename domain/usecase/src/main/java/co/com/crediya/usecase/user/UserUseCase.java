@@ -1,8 +1,8 @@
 package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.exception.UserErrorCode;
-import co.com.crediya.model.exception.specificExceptions.ConflictException;
-import co.com.crediya.model.exception.specificExceptions.UnauthorizedException;
+import co.com.crediya.model.exception.specific_exceptions.ConflictException;
+import co.com.crediya.model.exception.specific_exceptions.UnauthorizedException;
 import co.com.crediya.model.login.Login;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;

@@ -13,9 +13,9 @@ import co.com.crediya.api.response.ApiResponseBuilder;
 import co.com.crediya.api.response.UsersByEmailResponse;
 import co.com.crediya.api.segurity.jwt.AuthenticationService;
 import co.com.crediya.model.exception.UserErrorCode;
-import co.com.crediya.model.exception.specificExceptions.BadRequestException;
-import co.com.crediya.model.exception.specificExceptions.NotFoundException;
-import co.com.crediya.model.exception.specificExceptions.UnauthorizedException;
+import co.com.crediya.model.exception.specific_exceptions.BadRequestException;
+import co.com.crediya.model.exception.specific_exceptions.NotFoundException;
+import co.com.crediya.model.exception.specific_exceptions.UnauthorizedException;
 import co.com.crediya.model.user.User;
 import co.com.crediya.usecase.exception.UserValidationException;
 import co.com.crediya.usecase.rol.gateways.RolService;
@@ -23,7 +23,6 @@ import co.com.crediya.usecase.user.gateways.UserService;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -33,7 +32,6 @@ import reactor.core.publisher.Mono;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -49,20 +47,18 @@ public class UserHandler {
     private final AuthenticationService authenticationService;
 
 
-    private static final ParameterizedTypeReference<Set<String>> LIST_STRING =
-            new ParameterizedTypeReference<>() {
-            };
-
     private UserErrorCode mapMessageToErrorCode(String code) {
         return UserErrorCode.fromCode(code);
     }
 
+
+    //primero
     public Mono<ServerResponse> login(ServerRequest serverRequest) {
         logger.info("UserHandler -> login : inicia el flujo.");
-        return serverRequest.bodyToMono(LoginDto.class)
+        return serverRequest.bodyToMono(LoginDto.class)//se captura a dto
                 .doOnNext(dto -> logger.info("UserHandler -> login : DTO recibido"))
                 .flatMap(dto -> {
-                    List<UserErrorCode> infraErrors = validator.validate(dto).stream()
+                    List<UserErrorCode> infraErrors = validator.validate(dto).stream()//validan errores
                             .map(v -> mapMessageToErrorCode(v.getMessage()))
                             .filter(Objects::nonNull)
                             .distinct()
@@ -73,11 +69,11 @@ public class UserHandler {
                     }
                     return Mono.just(dto);
                 })
-                .map(genericDtoMapper::toUser)
+                .map(genericDtoMapper::toLogin)
                 .doOnNext(login -> logger.info("UserHandler -> login : se mapea de dto a usuario"))
                 .flatMap(userService::findIsExist)
                 .flatMap(user -> rolService.findById(user.getRolId())
-                        .map(role -> new TokenClaimsDto(
+                        .map(role -> new TokenClaimsDto(//se crea dto para tomar la info para el token
                                 user.getUserId(),
                                 user.getFirstName(),
                                 user.getLastName(),
@@ -86,12 +82,12 @@ public class UserHandler {
                                 role.getName()
                         )))
                 .flatMap(tokenClaimsDto -> {
-                    TokenDto token = authenticationService.generateToken(tokenClaimsDto);
+                    TokenDto token = authenticationService.generateToken(tokenClaimsDto); //se retorna el token
                     return apiResponseBuilder.build(HttpStatus.OK, "Usuario logueado exitosamente", token.token());
                 })
                 .doOnSuccess(l -> logger.info("UserHandler -> login : Usuario autenticado exitosamente"));
     }
-
+    // segundo AuthFilter
     public Mono<ServerResponse> createUser(ServerRequest serverRequest) {
         logger.info("UserHandler -> createUser : inicia el flujo.");
         return serverRequest.bodyToMono(UserDto.class)
@@ -157,19 +153,21 @@ public class UserHandler {
                 .doOnSuccess(resp -> logger.info("UserHandler -> findAll : Todos los usuarios fueron recuperados y enviados correctamente"));
     }
 
+
+
+    //historia de solicitud
     public Mono<ServerResponse> getUsersMapEmails(ServerRequest serverRequest) {
         logger.info("UserHandler -> getUsersMapEmails : inicia el flujo.");
 
         return serverRequest.bodyToMono(EmailsRequestDto.class)
-                .map(req -> req.emails() == null ? List.<String>of() : req.emails())
+                .map(EmailsRequestDto::emails)
                 .map(list -> list.stream()
                         .map(String::trim)
-                        .filter(s -> !s.isBlank())
                         .collect(Collectors.toCollection(LinkedHashSet::new)))
                 .filter(emails -> !emails.isEmpty())
                 .switchIfEmpty(Mono.error(new BadRequestException(UserErrorCode.EMAIL_EMPTY)))
                 .flatMap(emails -> {
-                    logger.info("UserHandler -> getUsersMapEmails : "+emails.size()+" emails recibidos");
+                    logger.info("UserHandler -> getUsersMapEmails : " + emails.size() + " emails recibidos");
 
                     return userService.getUsersByEmails(emails)
                             .collectMap(User::getEmail, genericDtoMapper::toDto)
@@ -183,7 +181,6 @@ public class UserHandler {
                             });
                 });
     }
-
 
     public Mono<ServerResponse> validateToken(ServerRequest serverRequest) {
         logger.info("UserHandler -> validateToken : inicia el flujo.");

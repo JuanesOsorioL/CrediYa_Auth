@@ -19,7 +19,9 @@ import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,9 +42,11 @@ class UserReactiveRepositoryAdapterTest {
             "John Doe",
             "Gomez",
             LocalDate.of(1990, 1, 1),
+            "12345",
             "123456789",
-            "123456",
+            "Customer",
             "john@doe.com",
+            "1234",
             BigDecimal.valueOf(18000000.0)
     );
 
@@ -127,5 +131,86 @@ class UserReactiveRepositoryAdapterTest {
         StepVerifier.create(result)
                 .expectNext(true)
                 .verifyComplete();
+    }
+
+    @Test
+    void mustFindIsExist_success() {
+        when(repository.findByEmailAndPassword("john@doe.com", "1234"))
+                .thenReturn(Mono.just(user));
+
+        StepVerifier.create(repositoryAdapter.findIsExist("john@doe.com", "1234"))
+                .expectNext(user)
+                .verifyComplete();
+
+        verify(repository).findByEmailAndPassword("john@doe.com", "1234");
+
+    }
+
+    @Test
+    void mustFindIsExist_emptyCompletes() {
+        when(repository.findByEmailAndPassword("john@doe.com", "badpass"))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(repositoryAdapter.findIsExist("john@doe.com", "badpass"))
+                .verifyComplete();
+
+        verify(repository).findByEmailAndPassword("john@doe.com", "badpass");
+    }
+
+    @Test
+    void mustExistUserByDocumentId_true() {
+        when(repository.existsByDocumentId("123456789")).thenReturn(Mono.just(true));
+
+        StepVerifier.create(repositoryAdapter.existUserByDocumentId("123456789"))
+                .expectNext(true)
+                .verifyComplete();
+
+        verify(repository).existsByDocumentId("123456789");
+    }
+
+    @Test
+    void mustExistUserByDocumentId_false() {
+        when(repository.existsByDocumentId("000")).thenReturn(Mono.just(false));
+
+        StepVerifier.create(repositoryAdapter.existUserByDocumentId("000"))
+                .expectNext(false)
+                .verifyComplete();
+
+        verify(repository).existsByDocumentId("000");
+    }
+
+    @Test
+    void mustFindByDocumentId_success() {
+        when(repository.findByDocumentId("123456789")).thenReturn(Mono.just(user));
+
+        StepVerifier.create(repositoryAdapter.findByDocumentId("123456789"))
+                .expectNext(user)
+                .verifyComplete();
+
+        verify(repository).findByDocumentId("123456789");
+    }
+
+    @Test
+    void mustGetUsersByEmails_success() {
+        Set<String> emails = Set.of("john@doe.com", "jane@doe.com");
+        when(repository.findByEmailIn(emails)).thenReturn(Flux.just(user));
+
+        StepVerifier.create(repositoryAdapter.getUsersByEmails(emails))
+                .expectNext(user)
+                .verifyComplete();
+
+        verify(repository).findByEmailIn(emails);
+    }
+
+    @Test
+    void mustGetUsersByEmails_propagatesError() {
+        Set<String> emails = Set.of("john@doe.com");
+        when(repository.findByEmailIn(emails)).thenReturn(Flux.error(new RuntimeException("db error")));
+
+        StepVerifier.create(repositoryAdapter.getUsersByEmails(emails))
+                .expectErrorMessage("db error")
+                .verify();
+
+        verify(repository).findByEmailIn(emails);
     }
 }

@@ -1,8 +1,11 @@
 package co.com.crediya.usecase.user;
 
+import co.com.crediya.model.exception.UserErrorCode;
+import co.com.crediya.model.exception.specific_exceptions.ConflictException;
+import co.com.crediya.model.exception.specific_exceptions.UnauthorizedException;
+import co.com.crediya.model.login.Login;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
-import co.com.crediya.model.exception.UserErrorCode;
 import co.com.crediya.usecase.exception.UserValidationException;
 import co.com.crediya.usecase.logger.Logger;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +17,7 @@ import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 
 import static org.mockito.Mockito.*;
 
@@ -37,21 +41,33 @@ class UserUseCaseTest {
     }
 
     @Test
-    void createUser_ShouldFail_WhenDocumentAlreadyExists() {
+    void createUser_ShouldFail_WhenEmailAlreadyExists_conflict() {
         User user = new User("1", "juan", "carlos",
-                "DOC-999",
-                fechaHoy,
-                "3001112222",
-                "john@example.com",
-                BigDecimal.valueOf(1000));
+                "DOC-123456", fechaHoy, "3002223333", "john@example.com", "1234",
+                "Customer", BigDecimal.valueOf(1000));
+
+        when(userRepository.existUserByDocumentId("DOC-123456")).thenReturn(Mono.just(false));
+        when(userRepository.existsByEmail("john@example.com")).thenReturn(Mono.just(true));
+
+        StepVerifier.create(userUseCase.createUser(user))
+                .expectError(ConflictException.class)
+                .verify();
+
+        verify(userRepository).existUserByDocumentId("DOC-123456");
+        verify(userRepository).existsByEmail("john@example.com");
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void createUser_ShouldFail_WhenDocumentAlreadyExists_conflict() {
+        User user = new User("1", "juan", "carlos",
+                "DOC-999", fechaHoy, "3001112222", "john@example.com", "1234",
+                "Customer", BigDecimal.valueOf(1000));
 
         when(userRepository.existUserByDocumentId("DOC-999")).thenReturn(Mono.just(true));
 
         StepVerifier.create(userUseCase.createUser(user))
-                .expectErrorMatches(thr ->
-                        thr instanceof UserValidationException dve &&
-                                dve.getDomainErrors().contains(UserErrorCode.DOCUMENT_ALREADY_REGISTERED)
-                )
+                .expectError(ConflictException.class)
                 .verify();
 
         verify(userRepository).existUserByDocumentId("DOC-999");
@@ -62,7 +78,7 @@ class UserUseCaseTest {
     @Test
     void createUser_ShouldFail_WhenFirstNameLastNameAndEmailAreEmpty() {
         User invalidUser = new User("1", "", "",
-                "DOC-123456", fechaHoy, "3000000000", "", BigDecimal.valueOf(1000));
+                "DOC-123456", fechaHoy, "3000000000", "", "1234", "Customer", BigDecimal.valueOf(1000));
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
@@ -81,7 +97,8 @@ class UserUseCaseTest {
     @Test
     void createUser_ShouldFail_WhenBaseSalaryIsInvalid() {
         User invalidUser = new User("1", "juan", "carlos",
-                "DOC-123456", fechaHoy, "3000000000", "a@b.com", BigDecimal.valueOf(-1000));
+                "DOC-123456", fechaHoy, "3000000000", "a@b.com", "1234",
+                "Customer", BigDecimal.valueOf(-1000));
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
@@ -98,7 +115,8 @@ class UserUseCaseTest {
     @Test
     void createUser_ShouldFail_WhenFirstNameLastNameAndEmailAreNull() {
         User invalidUser = new User("1", null, null,
-                "DOC-123456", fechaHoy, "3000000000", null, BigDecimal.valueOf(1000));
+                "DOC-123456", fechaHoy, "3000000000", null, "1234",
+                "Customer", BigDecimal.valueOf(1000));
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
@@ -117,7 +135,8 @@ class UserUseCaseTest {
     @Test
     void createUser_ShouldFail_WhenEmailIsInvalidFormat() {
         User invalidUser = new User("1", "juan", "carlos",
-                "DOC-123456", fechaHoy, "3000000000", "juanesosoriooutl.com", BigDecimal.valueOf(1000));
+                "DOC-123456", fechaHoy, "3000000000", "juanesosoriooutl.com", "1234",
+                "Customer", BigDecimal.valueOf(1000));
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
@@ -134,7 +153,8 @@ class UserUseCaseTest {
     @Test
     void createUser_ShouldFail_WhenBaseSalaryExceedsMaxAllowed() {
         User invalidUser = new User("1", "juan", "carlos",
-                "DOC-123456", fechaHoy, "3000000000", "a@b.com", BigDecimal.valueOf(18_000_000.0));
+                "DOC-123456", fechaHoy, "3000000000", "a@b.com", "1234",
+                "Customer", BigDecimal.valueOf(18_000_000.0));
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
@@ -151,7 +171,8 @@ class UserUseCaseTest {
     @Test
     void createUser_ShouldFail_WhenBaseSalaryIsNull() {
         User invalidUser = new User("1", "juan", "carlos",
-                "DOC-123456", fechaHoy, "3000000000", "juanesosorio@outl.com", null);
+                "DOC-123456", fechaHoy, "3000000000", "1234",
+                "Customer", "juanesosorio@outl.com", null);
 
         StepVerifier.create(userUseCase.createUser(invalidUser))
                 .expectErrorMatches(throwable ->
@@ -166,29 +187,54 @@ class UserUseCaseTest {
     }
 
     @Test
-    void createUser_ShouldFail_WhenEmailAlreadyExists() {
-        User user = new User("1", "juan", "carlos",
-                "DOC-123456", fechaHoy, "3002223333", "john@example.com", BigDecimal.valueOf(1000));
+    void findByDocumentId_ShouldDelegateAndReturn() {
+        User user = new User("u1", "Ana", "Perez",
+                "DOC-777", fechaHoy, "3009998888", "ana@examples.com", "1234",
+                "Customer", BigDecimal.valueOf(1000));
 
-        when(userRepository.existUserByDocumentId("DOC-123456")).thenReturn(Mono.just(false));
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(Mono.just(true));
+        when(userRepository.findByDocumentId("DOC-777")).thenReturn(Mono.just(user));
 
-        StepVerifier.create(userUseCase.createUser(user))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof UserValidationException dve &&
-                                dve.getDomainErrors().contains(UserErrorCode.EMAIL_ALREADY_REGISTERED)
-                )
+        StepVerifier.create(userUseCase.findByDocumentId("DOC-777"))
+                .expectNext(user)
+                .verifyComplete();
+
+        verify(userRepository, times(1)).findByDocumentId("DOC-777");
+    }
+
+
+    @Test
+    void findIsExist_ShouldThrowUnauthorized_WhenNoMatch() {
+        Login login = new Login("john@example.com", "badpass");
+        when(userRepository.findIsExist("john@example.com", "badpass")).thenReturn(Mono.empty());
+
+        StepVerifier.create(userUseCase.findIsExist(login))
+                .expectError(UnauthorizedException.class)
                 .verify();
 
-        verify(userRepository).existUserByDocumentId("DOC-123456");
-        verify(userRepository).existsByEmail("john@example.com");
-        verify(userRepository, never()).save(any());
+        verify(userRepository).findIsExist("john@example.com", "badpass");
     }
+
+    @Test
+    void findIsExist_ShouldReturnUser_WhenCredentialsMatch() {
+        Login login = new Login("john@example.com", "secret");
+        User repoUser = new User("u1", "John", "Doe",
+                "DOC-1", fechaHoy, "300", "john@example.com", "secret", "Customer", BigDecimal.valueOf(1000));
+
+        when(userRepository.findIsExist("john@example.com", "secret")).thenReturn(Mono.just(repoUser));
+
+        StepVerifier.create(userUseCase.findIsExist(login))
+                .expectNext(repoUser)
+                .verifyComplete();
+
+        verify(userRepository).findIsExist("john@example.com", "secret");
+    }
+
 
     @Test
     void createUser_ShouldSucceed_WhenUserIsValid() {
         User user = new User("1", "juan", "carlos",
-                "DOC-123456", fechaHoy, "3002223333", "john@examples.com", BigDecimal.valueOf(1000));
+                "DOC-123456", fechaHoy, "3002223333", "john@examples.com", "1234",
+                "Customer", BigDecimal.valueOf(1000));
 
         when(userRepository.existUserByDocumentId("DOC-123456")).thenReturn(Mono.just(false));
         when(userRepository.existsByEmail("john@examples.com")).thenReturn(Mono.just(false));
@@ -211,9 +257,26 @@ class UserUseCaseTest {
     }
 
     @Test
+    void getUsersByEmails_ShouldReturnUsers() {
+        Set<String> emails = Set.of("a@ex.com", "b@ex.com");
+        User u1 = new User("1", "A", "A", "D1", fechaHoy, "300", "a@ex.com", "p", "Customer", BigDecimal.TEN);
+        User u2 = new User("2", "B", "B", "D2", fechaHoy, "301", "b@ex.com", "p", "Customer", BigDecimal.ONE);
+
+        when(userRepository.getUsersByEmails(emails)).thenReturn(Flux.just(u1, u2));
+
+        StepVerifier.create(userUseCase.getUsersByEmails(emails))
+                .expectNext(u1)
+                .expectNext(u2)
+                .verifyComplete();
+
+        verify(userRepository).getUsersByEmails(emails);
+    }
+
+    @Test
     void getAllUsers_ShouldReturnUsers() {
         User user = new User("1", "juan", "carlos",
-                "DOC-777", fechaHoy, "3009998888", "john@examples.com", BigDecimal.valueOf(1000));
+                "DOC-777", fechaHoy, "3009998888", "john@examples.com", "1234",
+                "Customer", BigDecimal.valueOf(1000));
 
         when(userRepository.findAll()).thenReturn(Flux.just(user));
 

@@ -10,14 +10,12 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface GenericDtoMapper {
 
-    Login toUser(LoginDto userDto);
+    Login toLogin(LoginDto userDto);
 
     User toUser(UserDocumentDto userDocumentDto);
     // no se pidio, trae todos los usuarios
     UserDto toDto(User user);
 
-
-    //
     User toUser(UserDto userDto);
 
 }

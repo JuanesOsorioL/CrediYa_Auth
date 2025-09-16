@@ -10,19 +10,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserTest {
 
     @Test
-    void allArgsConstructorAndGettersTest() {
-        LocalDate birthDate = LocalDate.of(1990, 5, 15);
-        BigDecimal salary = new BigDecimal("3000.50");
+    void settersAndGettersTest() {
+        User user = new User();
+        user.setUserId("U001");
+        user.setFirstName("Ana");
+        user.setLastName("Perez");
+        user.setBaseSalary(new BigDecimal("2500"));
 
-        User user = new User("U123", "John", "Doe","123456", birthDate, "123456789", "john@doe.com", salary);
-
-        assertEquals("U123", user.getUserId());
-        assertEquals("John", user.getFirstName());
-        assertEquals("Doe", user.getLastName());
-        assertEquals(birthDate, user.getBirthDate());
-        assertEquals("123456789", user.getPhone());
-        assertEquals("john@doe.com", user.getEmail());
-        assertEquals(new BigDecimal("3000.50"), user.getBaseSalary());
+        assertEquals("U001", user.getUserId());
+        assertEquals("Ana", user.getFirstName());
+        assertEquals("Perez", user.getLastName());
+        assertEquals(new BigDecimal("2500"), user.getBaseSalary());
     }
 
     @Test
