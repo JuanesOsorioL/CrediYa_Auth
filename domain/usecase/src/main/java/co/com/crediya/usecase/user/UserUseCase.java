@@ -1,11 +1,13 @@
 package co.com.crediya.usecase.user;
 
 import co.com.crediya.model.exception.UserErrorCode;
+import co.com.crediya.model.exception.specific_exceptions.ConflictException;
+import co.com.crediya.model.exception.specific_exceptions.UnauthorizedException;
+import co.com.crediya.model.logger.Logger;
 import co.com.crediya.model.login.Login;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRepository;
 import co.com.crediya.usecase.exception.UserValidationException;
-import co.com.crediya.usecase.logger.Logger;
 import co.com.crediya.usecase.user.gateways.UserService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -14,6 +16,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -28,78 +31,89 @@ public class UserUseCase implements UserService {
     private static final Pattern EMAIL_REGEX = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
 
     @Override
+    //->Verifica si usuario existe enviando email y pass, retorna el usuario
+    public Mono<User> findIsExist(Login login) {
+        return userRepository.findIsExist(login.getEmail(), login.getPassword())
+                .switchIfEmpty(Mono.error(new UnauthorizedException(UserErrorCode.LOGUIN_FAIL_USER_NOT_FOUND)))
+                .doOnNext(u -> logger.info("UserUseCase -> findIsExist : se verifica si existe usuario con el email y passsword " + u.getEmail() + " password no mostrado "));
+    }
+
+    @Override
+    //->se crea usuario, retorna el usuario
     public Mono<User> createUser(User user) {
-        logger.info("Iniciando validaciones de Dominio");
+        logger.info("UserUseCase - > createUser : Iniciando validaciones de Dominio");
         List<UserErrorCode> errors = new ArrayList<>();
         if (user.getFirstName() == null || user.getFirstName().trim().isEmpty()) {
             errors.add(UserErrorCode.FIRST_NAME_EMPTY);
-            logger.info("Nombre vació");
+            logger.info("UserUseCase - > createUser : Nombre vació");
         }
         if (user.getLastName() == null || user.getLastName().trim().isEmpty()) {
             errors.add(UserErrorCode.LAST_NAME_EMPTY);
-            logger.info("Apellido vació");
+            logger.info("UserUseCase - > createUser : Apellido vació");
         }
         if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
             errors.add(UserErrorCode.EMAIL_EMPTY);
-            logger.info("Email vació");
+            logger.info("UserUseCase - > createUser : Email vació");
         } else if (!EMAIL_REGEX.matcher(user.getEmail()).matches()) {
             errors.add(UserErrorCode.EMAIL_INVALID);
-            logger.info("Email Invalido");
+            logger.info("UserUseCase - > createUser : Email Invalido");
         }
         if (user.getBaseSalary() == null) {
             errors.add(UserErrorCode.BASE_SALARY_EMPTY);
-            logger.info("Salario vació");
+            logger.info("UserUseCase - > createUser : Salario vació");
         } else if (user.getBaseSalary().compareTo(SALARY_MIN) < 0 || user.getBaseSalary().compareTo(SALARY_MAX) > 0) {
             errors.add(UserErrorCode.BASE_SALARY_INVALID);
-            logger.info("Salario Invalido");
+            logger.info("UserUseCase - > createUser : Salario Invalido");
         }
         if (!errors.isEmpty()) {
-            logger.info("Se Genero Lista de Errores de Validacion");
+            logger.info("UserUseCase - > createUser : Se Genero Lista de Errores de Validacion");
             return Mono.error(new UserValidationException(List.of(), errors));
         }
 
         return userRepository.existUserByDocumentId(user.getDocumentId())
-                .doOnSubscribe(u -> logger.info("Se Verifica si ya existe el documento de identidad"))
+                .doOnSubscribe(u -> logger.info("UserUseCase - > createUser : Se Verifica si ya existe el documento de identidad"))
                 .flatMap(exist -> {
-                    if (exist) {
-                        logger.info("Documento de identidad ya existe");
-                        return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.DOCUMENT_ALREADY_REGISTERED)));
+                    if (Boolean.TRUE.equals(exist)) {
+                        logger.info("UserUseCase - > createUser : Documento de identidad ya existe");
+                        return Mono.error(new ConflictException(UserErrorCode.DOCUMENT_ALREADY_REGISTERED));
                     }
 
-                    logger.info("Se Verifica si correo ya existe");
+                    logger.info("UserUseCase - > createUser : Se Verifica si correo ya existe");
                     return userRepository.existsByEmail(user.getEmail())
                             .flatMap(emailExists -> {
-                                if (emailExists) {
-                                    logger.info("Correo si existe");
-                                    return Mono.error(new UserValidationException(List.of(), List.of(UserErrorCode.EMAIL_ALREADY_REGISTERED)));
+                                if (Boolean.TRUE.equals(emailExists)) {
+                                    logger.info("UserUseCase - > createUser : Correo si existe");
+                                    return Mono.error(new ConflictException(UserErrorCode.EMAIL_ALREADY_REGISTERED));
                                 }
-                                logger.info("Correo No existe, se agrega un UUID para guardarlo");
+                                logger.info("UserUseCase - > createUser : Correo No existe, se agrega un UUID para guardarlo");
                                 User withId = user.toBuilder()
                                         .userId(UUID.randomUUID().toString())
                                         .build();
                                 return userRepository.save(withId)
-                                        .doOnNext(u -> logger.info("Usuario guardado con id "));
+                                        .doOnNext(u -> logger.info("UserUseCase - > createUser : Usuario guardado con id " + u + " "));
                             });
                 });
     }
 
     @Override
-    public Flux<User> getAllUsers() {
-        return userRepository.findAll()
-                .doOnNext(u -> logger.info("Se buscan usuarios"));
-    }
-
-    @Override
+    //->se busca usuario por documento, retorna el usuario
     public Mono<User> findByDocumentId(String documentId) {
         return userRepository.findByDocumentId(documentId)
-                .doOnNext(u -> logger.info("Se buscan usuario por medio del documento"));
+                .doOnNext(u -> logger.info("UserUseCase -> findByDocumentId : Se buscan usuario por medio del documento"));
+
     }
 
     @Override
-    public Mono<User> findIsExist(Login login) {
-        return userRepository.findIsExist(login.getEmail(), login.getPassword())
-                .doOnNext(u -> logger.info("prueba " + u.getEmail() + " "));
+    //-> No se pidio, se trtae todos los usuarios
+    public Flux<User> getAllUsers() {
+        return userRepository.findAll()
+                .doOnNext(u -> logger.info("UserUseCase -> getAllUsers : Se buscan usuarios (No se pidio en los requerimientos)"));
     }
 
-
+    @Override
+    //-> consulta los usuarios, con una lista de correos, retorna un flux de ususarios
+    public Flux<User> getUsersByEmails(Set<String> emails) {
+        return userRepository.getUsersByEmails(emails)
+                .doOnNext(u -> logger.info("UserUseCase -> getUsersByEmails : Se buscan usuarios con base a la lista de emails"));
+    }
 }

@@ -6,7 +6,10 @@ import co.com.crediya.r2dbc.entities.UserEntity;
 import co.com.crediya.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Set;
 
 @Repository
 public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
@@ -21,24 +24,32 @@ public class UserReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<Boolean> existsByEmail(String email) {
-        return repository.existsByEmail(email);
+    //->Verifica si usuario existe enviando email y pass, retorna el usuario
+    public Mono<User> findIsExist(String email, String password) {
+        return repository.findByEmailAndPassword(email, password);
     }
 
     @Override
-    public Mono<User> findByDocumentId(String documentId) {
-        return repository.findByDocumentId(documentId);
-    }
-
-    @Override
+    //->Verifica si usuario existe enviando documento, retorna el usuario
     public Mono<Boolean> existUserByDocumentId(String documentId) {
         return repository.existsByDocumentId(documentId);
     }
 
     @Override
-    public Mono<User> findIsExist(String email, String password) {
-        return repository.findByEmailAndPassword(email, password);
+    //->Verifica si usuario existe enviando email, retorna boolean
+    public Mono<Boolean> existsByEmail(String email) {
+        return repository.existsByEmail(email);
     }
 
+    @Override
+    //->se busca usuario por documento, retorna el usuario
+    public Mono<User> findByDocumentId(String documentId) {
+        return repository.findByDocumentId(documentId);
+    }
 
+    @Override
+    //-> consulta los usuarios, con una lista de correos, retorna un flux de ususarios
+    public Flux<User> getUsersByEmails(Set<String> documents) {
+        return repository.findByEmailIn(documents);
+    }
 }

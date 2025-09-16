@@ -1,16 +1,22 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 adapters:
   r2dbc:
-    host: "localhost"
-    port: 5432
-    database: "auth"
-    schema: "public"
-    username: creditUserData #"creditSolicitudData"
-    password: "za4iLVvR8qVq4yQv"
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    database: ${DB_NAME:auth}
+    schema: ${DB_SCHEMA:public}
+    username: ${DB_USER:creditUserData}
+    password: ${DB_PASS:za4iLVvR8qVq4yQv}
 spring:
   application:
     name: "CrediYa_Auth"
+    ###
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:auth}?currentSchema=${DB_SCHEMA:public}
+    username: ${DB_USER:creditUserData}
+    password: ${DB_PASS:za4iLVvR8qVq4yQv}
+    ###
   devtools:
     add-properties: false
   h2:
@@ -29,7 +35,7 @@ management:
       probes:
         enabled: true
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8080"
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:8080} #"http://localhost:4200,http://localhost:8080"
 
 springdoc:
   api-docs:
@@ -37,10 +43,12 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+
 logging:
   level:
     root: WARN
-    co.com.crediya.api.logger.GlobalLogger: INFO
+    co.com.crediya.logger.logger.GlobalLogger: INFO
+
 routes:
   user:
     base: /api/v1/usuarios
@@ -48,7 +56,8 @@ routes:
     login: /api/v1/login
     validateToken: /api/v1/validateToken
     allUsers: /api/v1/usuarios/allUsers
+    someUsers: /api/v1/usuarios/mapEmails
 
 jwt:
-  secret: "yW9kMHFmQmQzUGxwM0NnNGcyZ1kzZzdXwqGZz/GePgs="
-  expiration: 3600000
+  secret: ${JWT_SECRET:yW9kMHFmQmQzUGxwM0NnNGcyZ1kzZzdXwqGZz/GePgs=} #"yW9kMHFmQmQzUGxwM0NnNGcyZ1kzZzdXwqGZz/GePgs="
+  expiration: ${JWT_EXPIRATION:3600000} #3600000

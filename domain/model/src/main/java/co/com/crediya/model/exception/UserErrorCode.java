@@ -13,17 +13,21 @@ public enum UserErrorCode {
     LAST_NAME_EMPTY("USR_002", "El apellido no puede ser vacío"),
     EMAIL_INVALID("USR_003", "El correo electrónico no es válido"),
     BASE_SALARY_INVALID("USR_004", "El salario base debe estar entre 0 y 15.000.000"),
-    EMAIL_ALREADY_REGISTERED("USR_005", "El correo electrónico ya está registrado"),
     BASE_SALARY_EMPTY("USR_007", "El salario base no puede ser vacío"),
     DOCUMENT_EMPTY("USR_008", "El Documento no puede ser vacío"),
-    USER_NOT_FOUND("USR_009", "Cliente no encontrado"),
-    DOCUMENT_ALREADY_REGISTERED("USR_010", "El Documento ingresado ya existe"),
     PASSWORD_EMPTY("USR_011", "El Password no puede ser vacío"),
     ROL_EMPTY("USR_012", "El Rol no puede ser vacío"),
+    LIST_EMAIL_EMPTY("USR_017", "La lista de Emails no puede estar vacía"),
+
+
     ROL_NOT_FOUND("USR_013", "Rol no encontrado"),
     TOKEN_EMPTY("USR_014", "Token no proporcionado"),
     TOKEN_INVALID("USR_015", "Token invalido"),
+    USER_NOT_FOUND("USR_009", "Cliente no encontrado"),
+    DOCUMENT_ALREADY_REGISTERED("USR_010", "El Documento ingresado ya existe"),
+    EMAIL_ALREADY_REGISTERED("USR_005", "El correo electrónico ya está registrado"),
     YOU_DONT_HAVE_PERMISSION("USR_016", "No tienes permisos para acceder a este recurso"),
+    LOGUIN_FAIL_USER_NOT_FOUND("USR_018", "Cliente no encontrado, usuario o contraseña no validos"),
     EMAIL_EMPTY("USR_006", "El correo electrónico no puede ser vacío");
 
     private final String code;
