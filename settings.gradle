@@ -28,3 +28,5 @@ include ':seguridad'
 project(':seguridad').projectDir = file('./infrastructure/driven-adapters/seguridad')
 include ':logger'
 project(':logger').projectDir = file('./infrastructure/driven-adapters/logger')
+//include ':swagger'
+//project(':swagger').projectDir = file('./infrastructure/driven-adapters/swagger')
