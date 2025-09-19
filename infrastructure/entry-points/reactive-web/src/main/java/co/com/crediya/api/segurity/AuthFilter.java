@@ -9,6 +9,7 @@ import co.com.crediya.model.logger.Logger;
 import co.com.crediya.model.segurity.SegurityGateway;
 import co.com.crediya.model.segurity.dto.Claismo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -22,12 +23,6 @@ public class AuthFilter implements WebFilter {
     private final GenericDtoMapper genericDtoMapper;
     private final Logger logger;
 
-    public AuthFilter(SegurityGateway segurityGateway, GenericDtoMapper genericDtoMapper, Logger logger, SegurityGateway segurityGateway1, GenericDtoMapper genericDtoMapper1, Logger logger1) {
-        this.segurityGateway = segurityGateway1;
-        this.genericDtoMapper = genericDtoMapper1;
-        this.logger = logger1;
-    }
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         logger.info("AuthFilter -> filter : inicia el flujo de validaciones del token");
@@ -35,16 +30,7 @@ public class AuthFilter implements WebFilter {
         var path = request.getURI().getPath();
         var method = request.getMethod();
 
-        if (path.startsWith("/api/v1/login")
-                || path.startsWith("/api/v1/validateToken")
-                || path.startsWith("/api/v1/usuarios/mapa")
-                || path.startsWith("/api/v1/usuarios/allUsers")
-                || path.startsWith("/api/v1/usuarios/document")
-                || path.startsWith("/v3/api-docs")
-                || path.startsWith("/CrediYa_Auth/build/reports/jacocoMergedReport")
-                || path.startsWith("/webjars/swagger-ui")
-                || path.startsWith("/actuator")
-                || (method != null && method.name().equalsIgnoreCase("OPTIONS"))) {
+        if (isWhitelisted(path, method)) {
             return chain.filter(exchange);
         }
 
@@ -54,13 +40,15 @@ public class AuthFilter implements WebFilter {
             header = header.substring(7);
             TokenDto token = new TokenDto(header);
 
-            Claismo claims = segurityGateway.validateTokenClaims(genericDtoMapper.toToken(token));
+            Claismo claismo = segurityGateway.validateTokenClaims(genericDtoMapper.toToken(token));
 
-            if (claims != null) {
-                String role = claims.Rol();
+            if (claismo != null) {
+                String role = claismo.Rol();
                 logger.info("AuthFilter -> filter : rol ingresado : " + role);
+
                 if (isValidRoleForEndpoint(role, request)) {
                     logger.info("AuthFilter -> filter : si cumple y puede ejecutar la solicitud");
+                    exchange.getAttributes().put("claims", claismo);
                     return chain.filter(exchange);
                 } else {
                     logger.info("AuthFilter -> filter : No tienes permisos para acceder a este recurso");
@@ -78,16 +66,32 @@ public class AuthFilter implements WebFilter {
 
 
     private boolean isValidRoleForEndpoint(String role, ServerHttpRequest request) {
-
         String path = request.getURI().getPath();
+
         if (path.startsWith("/api/v1/usuarios")) {
             return role.equals("Admin") || role.equals("Adviser");
         }
 
-        if (path.startsWith("/api/v1/solicitud") || (path.startsWith("/api/v1/validateToken"))) {
+        if (path.startsWith("/api/v1/solicitud")) {
             return role.equals("Customer");
         }
 
+        if (path.startsWith("/api/v1/validateToken") || path.startsWith("/api/v1/map") || path.startsWith("/api/v1/document")) {
+            logger.info("AuthFilter -> isValidRoleForEndpoint : Llamado del micro");
+            return role.equals("Admin") || role.equals("Adviser") || role.equals("Customer");
+        }
+
         return false;
+    }
+
+
+    private boolean isWhitelisted(String path, HttpMethod method) {
+        return path.startsWith("/api/v1/login")
+                || path.startsWith("/api/v1/usuarios/allUsers")//no aplica a los criterios
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/CrediYa_Auth/build/reports/jacocoMergedReport")
+                || path.startsWith("/webjars/swagger-ui")
+                || path.startsWith("/actuator")
+                || (method != null && method.name().equalsIgnoreCase("OPTIONS"));
     }
 }

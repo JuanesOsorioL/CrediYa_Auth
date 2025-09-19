@@ -15,6 +15,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -39,7 +40,7 @@ public class Authentication implements SegurityGateway {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
-    public Token generateToken(TokenClaims tokenClaims) {
+    public Mono<Token> generateToken(TokenClaims tokenClaims) {
         logger.info("AuthenticationService -> generateToken : se genera token");
         Map<String, Object> claims = Map.of(
                 "FistName", tokenClaims.firstName(),
@@ -47,14 +48,14 @@ public class Authentication implements SegurityGateway {
                 "Document", tokenClaims.documentId(),
                 "Rol", tokenClaims.rolName()
         );
-        return new Token(Jwts.builder()
+        return Mono.just(new Token(Jwts.builder()
                 .id(tokenClaims.userId())
                 .claims(claims)
                 .subject(tokenClaims.email())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSingInKey())
-                .compact());
+                .compact()));
 
     }
 
@@ -66,7 +67,7 @@ public class Authentication implements SegurityGateway {
                     .build()
                     .parseSignedClaims(token.token())
                     .getPayload();
-            logger.info("mirar1111 : " + claims.toString());
+            logger.info("AuthenticationService -> validateTokenAndGetClaims : contenido del token Ahora es un Claismo : " + claims.toString());
             return authenticationMapper.toClaismo(claims);
         } catch (JwtException e) {
             return null;

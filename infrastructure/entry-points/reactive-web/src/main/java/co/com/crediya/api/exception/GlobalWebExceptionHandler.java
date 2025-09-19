@@ -54,7 +54,7 @@ public class GlobalWebExceptionHandler implements WebExceptionHandler {
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         UserErrorCode.GENERIC_ERROR.getCode(),
                         "Error interno del servidor",
-                        List.of("Ocurrió un error inesperado"))
+                        List.of("Ocurrió un error inesperado",ex.getMessage()))
                 .flatMap(resp -> resp.writeTo(exchange, new ResponseContext()));
     }
 
