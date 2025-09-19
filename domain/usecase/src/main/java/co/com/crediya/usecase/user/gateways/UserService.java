@@ -1,6 +1,7 @@
 package co.com.crediya.usecase.user.gateways;
 
 import co.com.crediya.model.login.Login;
+import co.com.crediya.model.segurity.dto.TokenClaims;
 import co.com.crediya.model.user.User;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -10,7 +11,7 @@ import java.util.Set;
 public interface UserService {
 
     //->Verifica si usuario existe enviando email y pass, retorna el usuario
-    Mono<User> findIsExist(Login login);
+    Mono<TokenClaims> findIsExist(Login login);
 
     //->se crea usuario, retorna el usuario
     Mono<User> createUser(User user);

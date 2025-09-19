@@ -12,6 +12,7 @@ import co.com.crediya.model.segurity.dto.Token;
 import co.com.crediya.model.segurity.dto.TokenClaims;
 import co.com.crediya.model.user.User;
 import org.mapstruct.Mapper;
+import reactor.core.publisher.Mono;
 
 @Mapper(componentModel = "spring")
 public interface GenericDtoMapper {
