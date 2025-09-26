@@ -110,19 +110,15 @@ public class UserHandler {
         logger.info("UserHandler -> getUsersMapEmails : inicia el flujo.");
 
         return serverRequest.bodyToMono(EmailsRequestDto.class)
-                // si viene null, usar lista vacía
                 .map(dto -> java.util.Optional.ofNullable(dto.emails())
                         .orElse(java.util.Collections.emptyList()))
-                // trim, quitar nulos y vacíos, y deduplicar preservando orden
                 .map(list -> list.stream()
                         .filter(java.util.Objects::nonNull)
                         .map(String::trim)
                         .filter(s -> !s.isBlank())
                         .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new)))
-                // si quedó vacío => 400
                 .filter(emails -> !emails.isEmpty())
                 .switchIfEmpty(Mono.error(new BadRequestException(UserErrorCode.EMAIL_EMPTY)))
-                // buscar y responder
                 .flatMap(emails -> {
                     logger.info("UserHandler -> getUsersMapEmails : " + emails.size() + " emails recibidos");
                     return userService.getUsersByEmails(emails)
@@ -142,7 +138,7 @@ public class UserHandler {
                 .doOnSuccess(dto -> logger.info("UserHandler -> validateToken : Se envían ClaismoDto"));
     }
 
-    //
+
     public Mono<ServerResponse> findByDocumentId(ServerRequest serverRequest) {
         logger.info("UserHandler -> findByDocumentId : inicia el flujo, consultar cliente con documento");
         return serverRequest.bodyToMono(UserDocumentDto.class)
