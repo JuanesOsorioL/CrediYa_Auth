@@ -142,7 +142,7 @@ public class UserHandler {
                 .doOnSuccess(dto -> logger.info("UserHandler -> validateToken : Se envían ClaismoDto"));
     }
 
-    //ya no esta en uso
+    //
     public Mono<ServerResponse> findByDocumentId(ServerRequest serverRequest) {
         logger.info("UserHandler -> findByDocumentId : inicia el flujo, consultar cliente con documento");
         return serverRequest.bodyToMono(UserDocumentDto.class)
